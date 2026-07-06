@@ -82,11 +82,11 @@ export default function App() {
           
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            const role = userData.User_role || userData.role;
+            const role = userData.role;
             
             if (role === 'admin' || currentUser.email === 'admin@pawscura.com') {
               if (role !== 'admin' && currentUser.email === 'admin@pawscura.com') {
-                await updateDoc(userDocRef, { User_role: 'admin', role: 'admin' });
+                await updateDoc(userDocRef, { role: 'admin' });
               }
               setUser(currentUser);
             } else {
@@ -100,7 +100,6 @@ export default function App() {
               await setDoc(userDocRef, {
                 email: currentUser.email,
                 name: 'System Admin',
-                User_role: 'admin',
                 role: 'admin',
                 isPremium: true
               });
@@ -252,10 +251,10 @@ export default function App() {
     }
     try {
       const docRef = doc(db, 'users', userId);
-      await updateDoc(docRef, { User_role: newRole, role: newRole });
+      await updateDoc(docRef, { role: newRole });
       alert(`User role has been updated to ${newRole.toUpperCase()}.`);
       if (selectedUser && selectedUser.id === userId) {
-        setSelectedUser(prev => ({ ...prev, User_role: newRole, role: newRole }));
+        setSelectedUser(prev => ({ ...prev, role: newRole }));
       }
     } catch (e) {
       console.error('Error toggling role:', e);
@@ -827,12 +826,12 @@ export default function App() {
                       <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{userItem.id}</td>
                       <td>{userItem.email || 'guest@pawscura.com'}</td>
                       <td>
-                        <span className={`badge ${userItem.User_role === 'admin' || userItem.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`} style={{
-                          backgroundColor: userItem.User_role === 'admin' || userItem.role === 'admin' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                          color: userItem.User_role === 'admin' || userItem.role === 'admin' ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)',
-                          border: userItem.User_role === 'admin' || userItem.role === 'admin' ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
+                        <span className={`badge ${userItem.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`} style={{
+                          backgroundColor: userItem.role === 'admin' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                          color: userItem.role === 'admin' ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)',
+                          border: userItem.role === 'admin' ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
                         }}>
-                          {userItem.User_role === 'admin' || userItem.role === 'admin' ? 'Admin' : 'User'}
+                          {userItem.role === 'admin' ? 'Admin' : 'User'}
                         </span>
                       </td>
                       <td>
@@ -1051,8 +1050,8 @@ export default function App() {
             <div className="detail-row">
               <span className="detail-label">User Role:</span>
               <span className="detail-value">
-                <span className={`badge ${(selectedUser.User_role === 'admin' || selectedUser.role === 'admin') ? 'badge-urgent' : 'badge-safe'}`}>
-                  {(selectedUser.User_role === 'admin' || selectedUser.role === 'admin') ? 'ADMINISTRATOR' : 'APP USER'}
+                <span className={`badge ${selectedUser.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`}>
+                  {selectedUser.role === 'admin' ? 'ADMINISTRATOR' : 'APP USER'}
                 </span>
               </span>
             </div>
@@ -1131,7 +1130,7 @@ export default function App() {
 
               {/* Toggle User Role Access */}
               <button 
-                onClick={() => handleToggleRole(selectedUser.id, selectedUser.User_role || selectedUser.role)}
+                onClick={() => handleToggleRole(selectedUser.id, selectedUser.role)}
                 style={{
                   backgroundColor: 'var(--color-overlay)',
                   color: 'var(--color-text-primary)',
