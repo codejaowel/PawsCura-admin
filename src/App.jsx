@@ -5,7 +5,9 @@ import {
   doc, 
   updateDoc,
   addDoc,
-  deleteDoc
+  deleteDoc,
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
@@ -70,10 +72,54 @@ export default function App() {
   const [healthRecords, setHealthRecords] = useState([]);
   const [transactions, setTransactions] = useState([]);
 
-  // Auth state change subscription
+  // Auth state change subscription with role check
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            const role = userData.User_role || userData.role;
+            
+            if (role === 'admin' || currentUser.email === 'admin@pawscura.com') {
+              if (role !== 'admin' && currentUser.email === 'admin@pawscura.com') {
+                await updateDoc(userDocRef, { User_role: 'admin', role: 'admin' });
+              }
+              setUser(currentUser);
+            } else {
+              setLoginError('Access Denied: Not an administrator.');
+              await signOut(auth);
+              setUser(null);
+            }
+          } else {
+            // Auto create system admin document if email matches default
+            if (currentUser.email === 'admin@pawscura.com') {
+              await setDoc(userDocRef, {
+                email: currentUser.email,
+                name: 'System Admin',
+                User_role: 'admin',
+                role: 'admin',
+                isPremium: true
+              });
+              setUser(currentUser);
+            } else {
+              setLoginError('Access Denied: Admin profile record not found.');
+              await signOut(auth);
+              setUser(null);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching admin role:', err);
+          setLoginError('Authentication failed due to access validation error.');
+          await signOut(auth);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
       setAuthLoading(false);
     });
     return unsubscribe;
@@ -194,6 +240,27 @@ export default function App() {
       return;
     }
     alert(`Password reset link has been successfully dispatched to ${email}.`);
+  };
+
+  // Update user role status
+  const handleToggleRole = async (userId, currentRole) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    if (userId === auth.currentUser?.uid && newRole === 'user') {
+      if (!window.confirm('Warning: You are demoting yourself from administrator. You will lose access to this portal immediately. Proceed?')) {
+        return;
+      }
+    }
+    try {
+      const docRef = doc(db, 'users', userId);
+      await updateDoc(docRef, { User_role: newRole, role: newRole });
+      alert(`User role has been updated to ${newRole.toUpperCase()}.`);
+      if (selectedUser && selectedUser.id === userId) {
+        setSelectedUser(prev => ({ ...prev, User_role: newRole, role: newRole }));
+      }
+    } catch (e) {
+      console.error('Error toggling role:', e);
+      alert('Failed to update user role.');
+    }
   };
 
 
@@ -749,6 +816,7 @@ export default function App() {
                   <tr>
                     <th>User ID</th>
                     <th>Email Address</th>
+                    <th>System Role</th>
                     <th>Premium Access</th>
                     <th>Account Status</th>
                   </tr>
@@ -758,6 +826,15 @@ export default function App() {
                     <tr key={userItem.id} style={{ cursor: 'pointer', opacity: userItem.isSuspended ? 0.65 : 1 }} onClick={() => setSelectedUser(userItem)}>
                       <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{userItem.id}</td>
                       <td>{userItem.email || 'guest@pawscura.com'}</td>
+                      <td>
+                        <span className={`badge ${userItem.User_role === 'admin' || userItem.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`} style={{
+                          backgroundColor: userItem.User_role === 'admin' || userItem.role === 'admin' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                          color: userItem.User_role === 'admin' || userItem.role === 'admin' ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)',
+                          border: userItem.User_role === 'admin' || userItem.role === 'admin' ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
+                        }}>
+                          {userItem.User_role === 'admin' || userItem.role === 'admin' ? 'Admin' : 'User'}
+                        </span>
+                      </td>
                       <td>
                         <span className={`badge ${userItem.isPremium ? 'badge-safe' : 'badge-moderate'}`}>
                           {userItem.isPremium ? 'Premium Sub' : 'Free Tier'}
@@ -772,7 +849,7 @@ export default function App() {
                   ))}
                   {filteredUsers.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="empty-state">No app user directories matched search queries.</td>
+                      <td colSpan="5" className="empty-state">No app user directories matched search queries.</td>
                     </tr>
                   )}
                 </tbody>
@@ -972,6 +1049,14 @@ export default function App() {
               <span className="detail-value">{selectedUser.email || 'guest@pawscura.com'}</span>
             </div>
             <div className="detail-row">
+              <span className="detail-label">User Role:</span>
+              <span className="detail-value">
+                <span className={`badge ${(selectedUser.User_role === 'admin' || selectedUser.role === 'admin') ? 'badge-urgent' : 'badge-safe'}`}>
+                  {(selectedUser.User_role === 'admin' || selectedUser.role === 'admin') ? 'ADMINISTRATOR' : 'APP USER'}
+                </span>
+              </span>
+            </div>
+            <div className="detail-row">
               <span className="detail-label">Billing Plan:</span>
               <span className="detail-value">
                 <span className={`badge ${selectedUser.isPremium ? 'badge-safe' : 'badge-moderate'}`}>
@@ -1042,6 +1127,23 @@ export default function App() {
                 }}
               >
                 Toggle Premium Status
+              </button>
+
+              {/* Toggle User Role Access */}
+              <button 
+                onClick={() => handleToggleRole(selectedUser.id, selectedUser.User_role || selectedUser.role)}
+                style={{
+                  backgroundColor: 'var(--color-overlay)',
+                  color: 'var(--color-text-primary)',
+                  border: '1px solid var(--color-border-strong)',
+                  padding: '10px 16px',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '13px'
+                }}
+              >
+                Toggle Admin Role
               </button>
             </div>
           </div>
