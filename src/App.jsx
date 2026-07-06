@@ -87,22 +87,6 @@ export default function App() {
   // Urgency Filter
   const [scanUrgencyFilter, setScanUrgencyFilter] = useState('All');
 
-  // Transaction Editing & Creation States
-  const [showAddTransModal, setShowAddTransModal] = useState(false);
-  const [newTrans, setNewTrans] = useState({
-    userEmail: '',
-    planName: 'Premium',
-    amount: 9.99,
-    cardholderName: 'Admin Allocation',
-    status: 'Success'
-  });
-  const [isEditingTrans, setIsEditingTrans] = useState(false);
-  const [editTransForm, setEditTransForm] = useState({
-    amount: 0,
-    cardholderName: '',
-    status: 'Success'
-  });
-
   // Firestore subscribers
   useEffect(() => {
     if (!user) return;
@@ -212,84 +196,6 @@ export default function App() {
     alert(`Password reset link has been successfully dispatched to ${email}.`);
   };
 
-  // Synchronize edit values whenever a transaction is selected
-  useEffect(() => {
-    if (selectedTrans) {
-      setEditTransForm({
-        amount: selectedTrans.price !== undefined ? selectedTrans.price : (selectedTrans.amount || 0),
-        cardholderName: selectedTrans.cardholderName || '',
-        status: selectedTrans.status || 'Success'
-      });
-      setIsEditingTrans(false);
-    }
-  }, [selectedTrans]);
-
-  // Create manual transaction log
-  const handleCreateTransaction = async (e) => {
-    e.preventDefault();
-    if (!newTrans.userEmail.trim()) {
-      alert('Please provide a user email.');
-      return;
-    }
-
-    try {
-      const matchedUser = users.find(u => u.email?.toLowerCase() === newTrans.userEmail.trim().toLowerCase());
-      const userId = matchedUser ? matchedUser.id : 'unknown_user';
-
-      // 1. Add manual log entry to payments collection
-      await addDoc(collection(db, 'payments'), {
-        userId,
-        userEmail: newTrans.userEmail.trim().toLowerCase(),
-        planName: newTrans.planName,
-        amount: parseFloat(newTrans.amount) || 0,
-        status: newTrans.status,
-        cardholderName: newTrans.cardholderName.trim(),
-        method: 'Manual Invoice',
-        date: new Date()
-      });
-
-      // 2. If plan is Premium and status is Success/Admin Granted, and user is matched:
-      // automatically sync user's isPremium status!
-      if (matchedUser && (newTrans.planName === 'Premium' && (newTrans.status === 'Success' || newTrans.status === 'Admin Granted'))) {
-        await updateDoc(doc(db, 'users', matchedUser.id), { isPremium: true });
-      }
-
-      alert('Manual transaction record successfully added.');
-      setShowAddTransModal(false);
-      setNewTrans({
-        userEmail: '',
-        planName: 'Premium',
-        amount: 9.99,
-        cardholderName: 'Admin Allocation',
-        status: 'Success'
-      });
-    } catch (err) {
-      console.error('Error adding transaction:', err);
-      alert('Failed to add transaction log.');
-    }
-  };
-
-  // Save edited transaction log
-  const handleUpdateTransaction = async () => {
-    try {
-      const docRef = doc(db, 'payments', selectedTrans.id);
-      const updatedFields = {
-        amount: parseFloat(editTransForm.amount) || 0,
-        price: parseFloat(editTransForm.amount) || 0,
-        cardholderName: editTransForm.cardholderName.trim(),
-        status: editTransForm.status
-      };
-      await updateDoc(docRef, updatedFields);
-      
-      // Update local selected state view
-      setSelectedTrans(prev => ({ ...prev, ...updatedFields }));
-      setIsEditingTrans(false);
-      alert('Transaction log updated successfully.');
-    } catch (err) {
-      console.error('Error updating transaction:', err);
-      alert('Failed to update transaction.');
-    }
-  };
 
   // Delete transaction log
   const handleDeleteTransaction = async (transId) => {
