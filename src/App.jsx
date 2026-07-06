@@ -1254,10 +1254,6 @@ export default function App() {
               </span>
             </div>
 
-            <div className="detail-row">
-              <span className="detail-label">Clinic:</span>
-              <span className="detail-value">{selectedScan.clinic}</span>
-            </div>
 
             <div className="detail-row">
               <span className="detail-label">Owner User ID:</span>
