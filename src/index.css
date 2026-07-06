@@ -473,11 +473,11 @@ input:checked + .slider:before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--color-background);
+  background-color: var(--color-canvas);
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  z-index: 1000;
+  z-index: 9999;
   padding: 0;
   overflow: hidden;
   animation: fadeIn 0.25s ease-out;
