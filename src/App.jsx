@@ -68,7 +68,6 @@ export default function App() {
   
   // Database States
   const [users, setUsers] = useState([]);
-  const [pets, setPets] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
   const [transactions, setTransactions] = useState([]);
 
@@ -141,10 +140,6 @@ export default function App() {
       setUsers(data);
     });
 
-    const unsubPets = onSnapshot(collection(db, 'pets'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPets(data);
-    });
 
     const unsubRecords = onSnapshot(collection(db, 'healthRecords'), (snapshot) => {
       const data = snapshot.docs.map(doc => {
@@ -188,7 +183,6 @@ export default function App() {
 
     return () => {
       unsubUsers();
-      unsubPets();
       unsubRecords();
       unsubTransactions();
     };
@@ -323,12 +317,11 @@ export default function App() {
       premiumUsers,
       conversionRate,
       totalRevenue,
-      totalPets: pets.length,
       totalScans: healthRecords.length,
       urgentScans,
       safeScanRate
     };
-  }, [users, pets, healthRecords, transactions]);
+  }, [users, healthRecords, transactions]);
 
   // Tab Filtering & Query Searches
   const filteredUsers = useMemo(() => {
@@ -339,13 +332,7 @@ export default function App() {
     );
   }, [users, searchQuery]);
 
-  const filteredPets = useMemo(() => {
-    return pets.filter(p => 
-      (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.breed && p.breed.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.species && p.species.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [pets, searchQuery]);
+
 
   const filteredScans = useMemo(() => {
     let scans = healthRecords;
@@ -557,15 +544,7 @@ export default function App() {
               <span>Diagnostic Logs</span>
             </div>
           </li>
-          <li>
-            <div 
-              className={`nav-item ${activeTab === 'pets' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('pets'); setSearchQuery(''); }}
-            >
-              <span className="nav-icon"><Icons.Pets /></span>
-              <span>Pets Directory</span>
-            </div>
-          </li>
+
         </ul>
 
         {/* Sidebar Footer with Sign Out button */}
@@ -593,14 +572,12 @@ export default function App() {
               {activeTab === 'users' && 'User Management'}
               {activeTab === 'transactions' && 'Billing & Transactions'}
               {activeTab === 'scans' && 'AI Assessment Center'}
-              {activeTab === 'pets' && 'Registered Pet Registry'}
             </h2>
             <p className="header-subtitle">
               {activeTab === 'dashboard' && 'Real-time telemetry and subscription health metrics'}
               {activeTab === 'users' && `Listing ${filteredUsers.length} total mobile accounts`}
               {activeTab === 'transactions' && `Tracking ${filteredTransactions.length} processed invoices`}
               {activeTab === 'scans' && `Analyzing ${filteredScans.length} diagnostic scan entries`}
-              {activeTab === 'pets' && `Viewing ${filteredPets.length} registered animal logs`}
             </p>
           </div>
 
@@ -614,8 +591,7 @@ export default function App() {
                 placeholder={
                   activeTab === 'users' ? 'Search by name, email, or ID...' :
                   activeTab === 'scans' ? 'Search by pet, issue, or notes...' :
-                  activeTab === 'transactions' ? 'Search by email or plan...' :
-                  'Search pets...'
+                  'Search by email or plan...'
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -690,15 +666,6 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-primary">
-                  <Icons.Pets />
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.totalPets}</span>
-                  <span className="stat-label">Pets Registered</span>
-                </div>
-              </div>
 
               <div className="stat-card">
                 <div className="stat-icon-wrap stat-icon-primary">
@@ -998,32 +965,7 @@ export default function App() {
           </>
         )}
 
-        {/* ── PETS TAB ── */}
-        {activeTab === 'pets' && (
-          <div className="pets-gallery">
-            {filteredPets.map(pet => (
-              <div key={pet.id} className="pet-card">
-                <div className="pet-icon-wrap">
-                  <Icons.Pets />
-                </div>
-                <h4 className="pet-name">{pet.name}</h4>
-                <p className="pet-meta">{pet.species.toUpperCase()} • {pet.breed}</p>
-                <p className="pet-meta">{pet.gender} • {pet.age} yrs old</p>
-                <span className="pet-owner">Owner ID: {pet.userId.slice(0, 10)}...</span>
-              </div>
-            ))}
-            {filteredPets.length === 0 && (
-              <div className="panel" style={{ gridColumn: '1 / -1' }}>
-                <div className="empty-state">
-                  <div className="empty-state-icon">
-                    <Icons.Pets />
-                  </div>
-                  <p className="empty-state-title">No Pets Registered</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+
       </main>
 
       {/* ── USER DETAILS MODAL (Flowchart: Display User Information & Reset Password & Suspend Account) ── */}
