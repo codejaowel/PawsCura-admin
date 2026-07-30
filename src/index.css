@@ -821,3 +821,256 @@ input:checked + .slider:before {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ── API & QUOTA MONITOR CUSTOM STYLES ── */
+
+/* Green Banner Card */
+.api-banner-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, hsl(150, 80%, 14%) 0%, hsl(160, 60%, 22%) 100%);
+  border-radius: var(--radius-lg);
+  padding: 28px 36px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+  box-sizing: border-box;
+}
+
+.api-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.api-banner-title {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: hsl(150, 80%, 94%);
+}
+
+.api-banner-text {
+  font-size: var(--text-sm);
+  color: hsl(150, 40%, 80%);
+  max-width: 540px;
+  line-height: 1.5;
+}
+
+.api-banner-cost {
+  font-size: 32px;
+  font-weight: 900;
+  color: hsl(150, 80%, 90%);
+  flex-shrink: 0;
+}
+
+/* Monthly Credit Usage */
+.credit-progress-wrap {
+  height: 8px;
+  width: 100%;
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.credit-progress-bar {
+  height: 100%;
+  background-color: var(--color-brand);
+  border-radius: var(--radius-full);
+}
+
+/* API Detail Cards Grid */
+.api-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.api-detail-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.api-detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+}
+
+.api-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.api-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.api-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-success);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--color-success);
+}
+
+.api-card-pricing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.api-card-rate {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.api-card-cost-wrap {
+  text-align: right;
+}
+
+.api-card-cost-label {
+  display: block;
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.api-card-cost {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.api-card-quota-bar-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.api-quota-label {
+  color: var(--color-text-secondary);
+}
+
+.api-quota-pct {
+  color: var(--color-text-primary);
+}
+
+.api-card-progress-wrap {
+  height: 6px;
+  width: 100%;
+  background-color: var(--color-overlay);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.api-card-progress-bar {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+/* Daily Mini Bar Chart */
+.api-mini-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.api-chart-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 60px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.chart-bar-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 100%;
+  padding: 0 4px;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.chart-bar-fill:hover {
+  transform: scaleY(1.1);
+}
+
+.api-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.api-chart-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Themes for each API */
+.card-theme-blue .api-card-cost { color: hsl(200, 95%, 44%); }
+.card-theme-blue .api-card-progress-bar { background-color: hsl(200, 95%, 44%); }
+.card-theme-blue .chart-bar-fill { background-color: hsl(200, 95%, 85%); }
+.card-theme-blue .chart-bar-fill.bar-today { background-color: hsl(200, 95%, 44%); }
+
+.card-theme-purple .api-card-cost { color: hsl(262, 70%, 50%); }
+.card-theme-purple .api-card-progress-bar { background-color: hsl(262, 70%, 50%); }
+.card-theme-purple .chart-bar-fill { background-color: hsl(262, 70%, 85%); }
+.card-theme-purple .chart-bar-fill.bar-today { background-color: hsl(262, 70%, 50%); }
+
+.card-theme-orange .api-card-cost { color: hsl(28, 95%, 50%); }
+.card-theme-orange .api-card-progress-bar { background-color: hsl(28, 95%, 50%); }
+.card-theme-orange .chart-bar-fill { background-color: hsl(28, 95%, 85%); }
+.card-theme-orange .chart-bar-fill.bar-today { background-color: hsl(28, 95%, 50%); }
+
+.card-theme-green .api-card-cost { color: var(--color-success); }
+.card-theme-green .api-card-progress-bar { background-color: var(--color-success); }
+.card-theme-green .chart-bar-fill { background-color: hsl(150, 70%, 85%); }
+.card-theme-green .chart-bar-fill.bar-today { background-color: var(--color-success); }
+
+/* Quick stats icon wrap overrides */
+.stat-icon-blue { background-color: hsl(200, 95%, 96%); color: hsl(200, 95%, 44%); }
+.stat-icon-purple { background-color: hsl(262, 70%, 96%); color: hsl(262, 70%, 50%); }
+.stat-icon-orange { background-color: hsl(28, 95%, 96%); color: hsl(28, 95%, 50%); }
+.stat-icon-green { background-color: hsl(150, 70%, 96%); color: var(--color-success); }
+

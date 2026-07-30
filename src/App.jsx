@@ -52,6 +52,9 @@ const Icons = {
   ),
   Logout: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+  ),
+  ApiUsage: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
   )
 };
 
@@ -389,6 +392,68 @@ export default function App() {
     return maxVal > 0 ? maxVal : 100;
   }, [weeklyRevenueHistory]);
 
+  const apiMetrics = useMemo(() => {
+    return [
+      {
+        id: 'maps-js',
+        name: 'Maps JavaScript API',
+        todayCalls: 12,
+        maxQuota: 800,
+        pct: 1.5,
+        costRate: '$7 / 1000 calls',
+        estMonthlyCost: 3.27,
+        theme: 'blue',
+        history: [8, 10, 15, 7, 11, 9, 12],
+      },
+      {
+        id: 'directions',
+        name: 'Directions API',
+        todayCalls: 6,
+        maxQuota: 800,
+        pct: 0.8,
+        costRate: '$5 / 1000 calls',
+        estMonthlyCost: 1.26,
+        theme: 'purple',
+        history: [4, 5, 8, 3, 6, 5, 6],
+      },
+      {
+        id: 'places',
+        name: 'Places API',
+        todayCalls: 3,
+        maxQuota: 1000,
+        pct: 0.3,
+        costRate: '$17 / 1000 calls',
+        estMonthlyCost: 2.05,
+        theme: 'orange',
+        history: [2, 4, 3, 1, 2, 3, 3],
+      },
+      {
+        id: 'geocoding',
+        name: 'Geocoding API',
+        todayCalls: 2,
+        maxQuota: 1000,
+        pct: 0.2,
+        costRate: '$5 / 1000 calls',
+        estMonthlyCost: 0.32,
+        theme: 'green',
+        history: [1, 2, 3, 1, 1, 2, 2],
+      }
+    ];
+  }, []);
+
+  const filteredApis = useMemo(() => {
+    return apiMetrics.filter(api => 
+      api.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [apiMetrics, searchQuery]);
+
+  const totalEstCost = useMemo(() => {
+    return apiMetrics.reduce((sum, api) => sum + api.estMonthlyCost, 0).toFixed(2);
+  }, [apiMetrics]);
+
+  const creditLimit = 200;
+  const pctCreditUsed = ((parseFloat(totalEstCost) / creditLimit) * 100).toFixed(1);
+
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--color-canvas)', color: 'var(--color-text-primary)' }}>
@@ -422,7 +487,7 @@ export default function App() {
           boxSizing: 'border-box'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <img src="/logo.png" alt="PawsCura Logo" style={{ width: '48px', height: 'auto', margin: '0 auto 16px auto', display: 'block', objectFit: 'contain' }} />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="PawsCura Logo" style={{ width: '48px', height: 'auto', margin: '0 auto 16px auto', display: 'block', objectFit: 'contain' }} />
             <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', margin: 0 }}>PawsCura Portal</h2>
             <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>Sign in to access administrator dashboard controls</p>
           </div>
@@ -503,7 +568,7 @@ export default function App() {
       {/* ── SIDEBAR NAVIGATION ── */}
       <aside className="sidebar">
         <div className="brand-section">
-          <img src="/logo.png" alt="PawsCura Logo" style={{ width: '36px', height: 'auto', objectFit: 'contain', display: 'block' }} />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="PawsCura Logo" style={{ width: '36px', height: 'auto', objectFit: 'contain', display: 'block' }} />
           <h1 className="brand-name">PawsCura</h1>
         </div>
         
@@ -535,13 +600,14 @@ export default function App() {
               <span>Transactions</span>
             </div>
           </li>
+
           <li>
             <div 
-              className={`nav-item ${activeTab === 'scans' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('scans'); setSearchQuery(''); }}
+              className={`nav-item ${activeTab === 'api-usage' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('api-usage'); setSearchQuery(''); }}
             >
-              <span className="nav-icon"><Icons.Scans /></span>
-              <span>Diagnostic Logs</span>
+              <span className="nav-icon"><Icons.ApiUsage /></span>
+              <span>API Usage</span>
             </div>
           </li>
 
@@ -572,12 +638,14 @@ export default function App() {
               {activeTab === 'users' && 'User Management'}
               {activeTab === 'transactions' && 'Billing & Transactions'}
               {activeTab === 'scans' && 'AI Assessment Center'}
+              {activeTab === 'api-usage' && 'API & Quota Monitor'}
             </h2>
             <p className="header-subtitle">
               {activeTab === 'dashboard' && 'Real-time telemetry and subscription health metrics'}
               {activeTab === 'users' && `Listing ${filteredUsers.length} total mobile accounts`}
               {activeTab === 'transactions' && `Tracking ${filteredTransactions.length} processed invoices`}
               {activeTab === 'scans' && `Analyzing ${filteredScans.length} diagnostic scan entries`}
+              {activeTab === 'api-usage' && 'Google Maps Platform application-level telemetry and billing status'}
             </p>
           </div>
 
@@ -591,6 +659,7 @@ export default function App() {
                 placeholder={
                   activeTab === 'users' ? 'Search by name, email, or ID...' :
                   activeTab === 'scans' ? 'Search by pet, issue, or notes...' :
+                  activeTab === 'api-usage' ? 'Search APIs...' :
                   'Search by email or plan...'
                 }
                 value={searchQuery}
@@ -631,7 +700,7 @@ export default function App() {
               </div>
               <div style={{ flexShrink: 0, width: '160px', height: '160px', position:'relative', zIndex:1 }}>
                 <img 
-                  src="/Landing.png" 
+                  src={`${import.meta.env.BASE_URL}Landing.png`} 
                   alt="PawsCura App Mascot" 
                   style={{ 
                     width: '160px',
@@ -723,51 +792,115 @@ export default function App() {
               </div>
             </div>
 
-            {/* Recent Scans list */}
-            <div className="panel">
-              <div className="panel-header">
-                <h3 className="panel-title">Recent Critical Assessments</h3>
-                <button 
-                  className="filter-tab active"
-                  onClick={() => setActiveTab('scans')}
-                >
-                  View All Scans
-                </button>
-              </div>
-              <div className="table-container">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Pet Name</th>
-                      <th>Suspected Issue</th>
-                      <th>Urgency</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {healthRecords.slice(0, 5).map(record => (
-                      <tr key={record.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedScan(record)}>
-                        <td>{record.displayDate || record.date}</td>
-                        <td>{record.petName}</td>
-                        <td>{record.issue}</td>
-                        <td>
-                          <span className={`badge ${
-                            record.status?.toLowerCase() === 'urgent' || record.status?.toLowerCase() === 'immediate care' ? 'badge-urgent' :
-                            record.status?.toLowerCase() === 'moderate' ? 'badge-moderate' : 'badge-safe'
-                          }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {healthRecords.length === 0 && (
+            {/* Recent Transactions + Last Overview */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px', marginBottom: '24px' }}>
+
+              {/* Recent Transactions */}
+              <div className="panel" style={{ marginBottom: 0 }}>
+                <div className="panel-header">
+                  <h3 className="panel-title">Recent Transactions</h3>
+                  <button
+                    className="filter-tab active"
+                    onClick={() => setActiveTab('transactions')}
+                  >
+                    View All
+                  </button>
+                </div>
+                <div className="table-container">
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <td colSpan="4" style={{ textAlign: 'center' }}>No scan history logged yet.</td>
+                        <th>User</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Status</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {transactions.slice(0, 5).map(trans => (
+                        <tr key={trans.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedTrans(trans)}>
+                          <td style={{ fontSize: '12px', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {trans.userEmail}
+                          </td>
+                          <td>
+                            <span className="badge badge-safe" style={{ backgroundColor: 'var(--color-brand-transparent)', color: 'var(--color-brand)' }}>
+                              {trans.planName}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: '700' }}>${trans.price.toFixed(2)}</td>
+                          <td>
+                            <span className={`badge ${
+                              trans.status?.toLowerCase().includes('success') || trans.status?.toLowerCase().includes('granted')
+                                ? 'badge-safe' : 'badge-urgent'
+                            }`}>
+                              {trans.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {transactions.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="empty-state">No transactions recorded yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* Last Overview */}
+              <div className="panel" style={{ marginBottom: 0 }}>
+                <h3 className="panel-title" style={{ marginBottom: '20px' }}>Last Overview</h3>
+
+                {/* Feature: Premium vs Free */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>Premium Users</span>
+                    <span style={{ color: 'var(--color-brand)', fontWeight: '700' }}>{stats.premiumUsers}</span>
+                  </div>
+                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${stats.conversionRate}%`, background: 'linear-gradient(90deg, hsl(200,95%,44%), hsl(200,95%,60%))', borderRadius: 'var(--radius-full)' }} />
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>{stats.conversionRate}% conversion rate</span>
+                </div>
+
+                {/* Feature: Free Users */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>Free Tier Users</span>
+                    <span style={{ color: 'var(--color-text-primary)', fontWeight: '700' }}>{stats.totalUsers - stats.premiumUsers}</span>
+                  </div>
+                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${stats.totalUsers > 0 ? (((stats.totalUsers - stats.premiumUsers) / stats.totalUsers) * 100).toFixed(1) : 0}%`, backgroundColor: 'var(--color-warning)', borderRadius: 'var(--radius-full)' }} />
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>on free plan</span>
+                </div>
+
+                {/* Feature: AI Scans Safe Rate */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>Safe Scan Rate</span>
+                    <span style={{ color: 'var(--color-success)', fontWeight: '700' }}>{stats.safeScanRate}%</span>
+                  </div>
+                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${stats.safeScanRate}%`, backgroundColor: 'var(--color-success)', borderRadius: 'var(--radius-full)' }} />
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>of diagnostics are non-urgent</span>
+                </div>
+
+                {/* Feature: Urgent Scans */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>Urgent Cases</span>
+                    <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>{stats.urgentScans}</span>
+                  </div>
+                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${stats.totalScans > 0 ? ((stats.urgentScans / stats.totalScans) * 100).toFixed(1) : 0}%`, backgroundColor: 'var(--color-danger)', borderRadius: 'var(--radius-full)' }} />
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>require immediate care</span>
+                </div>
+              </div>
+
             </div>
           </>
         )}
@@ -965,6 +1098,134 @@ export default function App() {
           </>
         )}
 
+        {/* ── API USAGE TAB ── */}
+        {activeTab === 'api-usage' && (
+          <>
+            {/* Green Banner Card */}
+            <div className="api-banner-card">
+              <div className="api-banner-info">
+                <h3 className="api-banner-title">API Quota Monitor</h3>
+                <p className="api-banner-text">
+                  Dynamic quotas and estimated costs across Maps, Directions, Places, and Geocoding APIs.
+                </p>
+              </div>
+              <div className="api-banner-cost">
+                ${totalEstCost}
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="stats-grid">
+              {filteredApis.map(api => (
+                <div key={api.id} className="stat-card">
+                  <div className={`stat-icon-wrap stat-icon-${api.theme}`}>
+                    {/* Unique SVG theme indicator */}
+                    {api.theme === 'blue' && <Icons.Scans />}
+                    {api.theme === 'purple' && <Icons.Transactions />}
+                    {api.theme === 'orange' && <Icons.Users />}
+                    {api.theme === 'green' && <Icons.Check />}
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-value">{api.todayCalls}</span>
+                    <span className="stat-label">{api.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Monthly Credit Usage Panel */}
+            <div className="panel" style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div>
+                  <h3 className="panel-title" style={{ fontSize: '15px', fontWeight: '800' }}>Monthly $200 Free Credit Usage</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                    Google Maps Platform provides $200 free credit each month.
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--color-success)' }}>
+                    {pctCreditUsed}% Used
+                  </span>
+                </div>
+              </div>
+              
+              {/* Progress bar container */}
+              <div className="credit-progress-wrap">
+                <div 
+                  className="credit-progress-bar" 
+                  style={{ width: `${pctCreditUsed}%` }}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '600', marginTop: '8px' }}>
+                <span>$0</span>
+                <span>$200 Maximum</span>
+              </div>
+            </div>
+
+            {/* Detailed API Cards Grid */}
+            <div className="api-cards-grid">
+              {filteredApis.map(api => (
+                <div key={api.id} className={`api-detail-card card-theme-${api.theme}`}>
+                  <div className="api-card-header">
+                    <h4 className="api-card-title">{api.name}</h4>
+                    <div className="api-status-badge">
+                      <span className="status-dot" />
+                      <span>API active</span>
+                    </div>
+                  </div>
+                  
+                  <div className="api-card-pricing-row">
+                    <span className="api-card-rate">{api.costRate}</span>
+                    <div className="api-card-cost-wrap">
+                      <span className="api-card-cost-label">EST. MONTHLY</span>
+                      <span className="api-card-cost">${api.estMonthlyCost.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="api-card-quota-bar-row">
+                    <span className="api-quota-label">Today: {api.todayCalls} calls</span>
+                    <span className="api-quota-pct">{api.pct}%</span>
+                  </div>
+                  
+                  <div className="api-card-progress-wrap">
+                    <div className="api-card-progress-bar" style={{ width: `${api.pct}%` }} />
+                  </div>
+                  
+                  {/* Daily Mini Bar Chart (Last 7 Days) */}
+                  <div className="api-mini-chart-wrap">
+                    <div className="api-chart-bars">
+                      {api.history.map((val, idx) => {
+                        const maxVal = Math.max(...api.history);
+                        const heightPct = maxVal > 0 ? (val / maxVal) * 100 : 10;
+                        const isToday = idx === api.history.length - 1;
+                        return (
+                          <div key={idx} className="chart-bar-container">
+                            <div 
+                              className={`chart-bar-fill ${isToday ? 'bar-today' : ''}`}
+                              style={{ height: `${heightPct}%` }}
+                              title={`Day ${idx + 1}: ${val} calls`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="api-chart-labels">
+                      {api.history.map((_, idx) => (
+                        <span key={idx}>{idx + 1}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredApis.length === 0 && (
+                <div className="panel empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+                  No matching Google Maps APIs found.
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
       </main>
 
