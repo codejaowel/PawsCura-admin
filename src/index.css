@@ -113,38 +113,69 @@ button, a, input, select, [role="button"], .nav-item, .stat-card, .pet-card, .sl
 
 /* Sidebar navigation */
 .sidebar {
-  width: 260px;
-  background-color: var(--color-overlay);
-  border-right: 1px solid var(--color-border);
+  width: 270px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-right: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 24px 18px;
   flex-shrink: 0;
 }
 
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--color-border);
+  justify-content: center;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #e2e8f0;
   margin-bottom: 24px;
 }
 
-.brand-icon {
-  font-size: var(--text-xl);
+.brand-logo-wrapper {
+  background: #ffffff;
+  padding: 14px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 14px -2px rgba(14, 165, 233, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
-  color: var(--color-brand);
+  justify-content: center;
+  width: 100%;
+  transition: all var(--transition-base);
 }
 
-.brand-name {
-  font-size: var(--text-lg);
-  font-weight: 800;
-  color: var(--color-text-primary);
-  background: linear-gradient(135deg, var(--color-text-primary) 40%, var(--color-brand));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.brand-logo-wrapper:hover {
+  box-shadow: 0 6px 20px -2px rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.3);
+  transform: translateY(-1px);
+}
+
+.brand-logo-img {
+  max-width: 135px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
+.login-logo-wrapper {
+  background: #ffffff;
+  padding: 16px 28px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 24px -4px rgba(14, 165, 233, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.login-logo-img {
+  width: 190px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
 }
 
 .nav-list {
@@ -159,18 +190,29 @@ button, a, input, select, [role="button"], .nav-item, .stat-card, .pet-card, .sl
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  color: var(--color-text-secondary);
+  padding: 12px 16px;
+  color: #64748b;
   text-decoration: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-weight: 600;
   font-size: var(--text-sm);
   cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all var(--transition-base);
 }
 
-.nav-item:hover, .nav-item.active {
+.nav-item:hover {
   color: var(--color-brand);
-  background-color: var(--color-brand-transparent);
+  background-color: rgba(14, 165, 233, 0.07);
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  color: var(--color-brand);
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0.03) 100%);
+  font-weight: 700;
+  border-left: 3px solid var(--color-brand);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
 }
 
 .nav-icon {
@@ -185,8 +227,8 @@ button, a, input, select, [role="button"], .nav-item, .stat-card, .pet-card, .sl
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
-  padding: 32px;
-  background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.02), transparent 45%), var(--color-canvas);
+  padding: 36px 40px;
+  background: radial-gradient(circle at 90% 10%, rgba(14, 165, 233, 0.04), transparent 50%), #f8fafc;
 }
 
 .header-row {
@@ -197,15 +239,17 @@ button, a, input, select, [role="button"], .nav-item, .stat-card, .pet-card, .sl
 }
 
 .header-title {
-  font-size: var(--text-xl);
+  font-size: 26px;
   font-weight: 800;
-  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  color: #0f172a;
 }
 
 .header-subtitle {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  font-size: 13px;
+  color: #64748b;
   margin-top: 4px;
+  font-weight: 500;
 }
 
 /* Stats Cards Grid */
@@ -473,66 +517,50 @@ input:checked + .slider:before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--color-canvas);
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-  z-index: 9999;
-  padding: 0;
-  overflow: hidden;
-  animation: fadeIn 0.25s ease-out;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 40px 20px;
+  overflow-y: auto;
 }
 
 .modal-content {
   background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   width: 100%;
-  height: 100%;
-  padding: 60px 40px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  max-width: 600px;
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
-  border: none;
-  border-radius: 0;
-}
-
-.modal-content > *:not(.modal-close) {
-  max-width: 800px;
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 32px;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25);
+  position: relative;
+  margin: auto;
 }
 
 .modal-close {
-  position: fixed;
-  top: 30px;
-  right: 40px;
-  background: var(--color-overlay);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
   cursor: pointer;
-  z-index: 1010;
-  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: var(--color-border-strong);
   color: var(--color-text-primary);
-  transform: scale(1.05);
 }
 
 .modal-title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
   font-weight: 800;
   color: var(--color-text-primary);
-  margin-bottom: 30px;
-  letter-spacing: -0.5px;
+  margin-bottom: 20px;
 }
 
 .detail-row {
@@ -684,10 +712,10 @@ input:checked + .slider:before {
 
 /* Form inputs and buttons for manual transaction addition */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .form-label {
@@ -821,256 +849,3 @@ input:checked + .slider:before {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-/* ── API & QUOTA MONITOR CUSTOM STYLES ── */
-
-/* Green Banner Card */
-.api-banner-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(135deg, hsl(150, 80%, 14%) 0%, hsl(160, 60%, 22%) 100%);
-  border-radius: var(--radius-lg);
-  padding: 28px 36px;
-  margin-bottom: 28px;
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
-  box-sizing: border-box;
-}
-
-.api-banner-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.api-banner-title {
-  font-size: var(--text-lg);
-  font-weight: 800;
-  color: hsl(150, 80%, 94%);
-}
-
-.api-banner-text {
-  font-size: var(--text-sm);
-  color: hsl(150, 40%, 80%);
-  max-width: 540px;
-  line-height: 1.5;
-}
-
-.api-banner-cost {
-  font-size: 32px;
-  font-weight: 900;
-  color: hsl(150, 80%, 90%);
-  flex-shrink: 0;
-}
-
-/* Monthly Credit Usage */
-.credit-progress-wrap {
-  height: 8px;
-  width: 100%;
-  background-color: var(--color-canvas);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-}
-
-.credit-progress-bar {
-  height: 100%;
-  background-color: var(--color-brand);
-  border-radius: var(--radius-full);
-}
-
-/* API Detail Cards Grid */
-.api-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.api-detail-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-}
-
-.api-detail-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-border-strong);
-}
-
-.api-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.api-card-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-
-.api-status-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--color-success);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-success);
-  display: inline-block;
-  box-shadow: 0 0 8px var(--color-success);
-}
-
-.api-card-pricing-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 20px;
-}
-
-.api-card-rate {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-}
-
-.api-card-cost-wrap {
-  text-align: right;
-}
-
-.api-card-cost-label {
-  display: block;
-  font-size: 9px;
-  color: var(--color-text-muted);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.api-card-cost {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.api-card-quota-bar-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.api-quota-label {
-  color: var(--color-text-secondary);
-}
-
-.api-quota-pct {
-  color: var(--color-text-primary);
-}
-
-.api-card-progress-wrap {
-  height: 6px;
-  width: 100%;
-  background-color: var(--color-overlay);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: 24px;
-}
-
-.api-card-progress-bar {
-  height: 100%;
-  border-radius: var(--radius-full);
-}
-
-/* Daily Mini Bar Chart */
-.api-mini-chart-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.api-chart-bars {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  height: 60px;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.chart-bar-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  height: 100%;
-  padding: 0 4px;
-}
-
-.chart-bar-fill {
-  width: 100%;
-  border-top-left-radius: 2px;
-  border-top-right-radius: 2px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  cursor: pointer;
-}
-
-.chart-bar-fill:hover {
-  transform: scaleY(1.1);
-}
-
-.api-chart-labels {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 4px;
-}
-
-.api-chart-labels span {
-  flex: 1;
-  text-align: center;
-  font-size: 9px;
-  color: var(--color-text-muted);
-  font-weight: 600;
-}
-
-/* Themes for each API */
-.card-theme-blue .api-card-cost { color: hsl(200, 95%, 44%); }
-.card-theme-blue .api-card-progress-bar { background-color: hsl(200, 95%, 44%); }
-.card-theme-blue .chart-bar-fill { background-color: hsl(200, 95%, 85%); }
-.card-theme-blue .chart-bar-fill.bar-today { background-color: hsl(200, 95%, 44%); }
-
-.card-theme-purple .api-card-cost { color: hsl(262, 70%, 50%); }
-.card-theme-purple .api-card-progress-bar { background-color: hsl(262, 70%, 50%); }
-.card-theme-purple .chart-bar-fill { background-color: hsl(262, 70%, 85%); }
-.card-theme-purple .chart-bar-fill.bar-today { background-color: hsl(262, 70%, 50%); }
-
-.card-theme-orange .api-card-cost { color: hsl(28, 95%, 50%); }
-.card-theme-orange .api-card-progress-bar { background-color: hsl(28, 95%, 50%); }
-.card-theme-orange .chart-bar-fill { background-color: hsl(28, 95%, 85%); }
-.card-theme-orange .chart-bar-fill.bar-today { background-color: hsl(28, 95%, 50%); }
-
-.card-theme-green .api-card-cost { color: var(--color-success); }
-.card-theme-green .api-card-progress-bar { background-color: var(--color-success); }
-.card-theme-green .chart-bar-fill { background-color: hsl(150, 70%, 85%); }
-.card-theme-green .chart-bar-fill.bar-today { background-color: var(--color-success); }
-
-/* Quick stats icon wrap overrides */
-.stat-icon-blue { background-color: hsl(200, 95%, 96%); color: hsl(200, 95%, 44%); }
-.stat-icon-purple { background-color: hsl(262, 70%, 96%); color: hsl(262, 70%, 50%); }
-.stat-icon-orange { background-color: hsl(28, 95%, 96%); color: hsl(28, 95%, 50%); }
-.stat-icon-green { background-color: hsl(150, 70%, 96%); color: var(--color-success); }
-

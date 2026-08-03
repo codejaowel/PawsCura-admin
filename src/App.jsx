@@ -1,64 +1,209 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  onSnapshot,
+  doc,
   updateDoc,
   addDoc,
   deleteDoc,
-  getDoc,
-  setDoc
+  serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
-// Premium SVG Icon set to enforce V2.0 Anti-Generic UI Policy (No static Emojis in UI)
+// ── SVG Icon set ──────────────────────────────────────────────────────────────
 const Icons = {
-  Dashboard: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+  Clinic: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+      <line x1="12" y1="5" x2="12" y2="9"/>
+      <line x1="10" y1="7" x2="14" y2="7"/>
+    </svg>
   ),
-  Users: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+  Ads: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+    </svg>
   ),
-  Pets: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>
+  Edit: () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
   ),
-  Scans: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+  Trash: () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/>
+      <path d="M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
   ),
-  Transactions: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-  ),
-  Search: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  Plus: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
   ),
   Close: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
   ),
   Alert: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-  ),
-  Lock: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-  ),
-  Key: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5-3-3"></path></svg>
-  ),
-  Cross: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-  ),
-  Check: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
   ),
   Logout: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
   ),
-  ApiUsage: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
-  )
+  Search: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  MapPin: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+  ),
+  Phone: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+    </svg>
+  ),
+  Clock: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+  ),
+  Tag: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  ),
+  ToggleOn: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
+      <circle cx="16" cy="12" r="3" fill="currentColor"/>
+    </svg>
+  ),
+  ToggleOff: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
+      <circle cx="8" cy="12" r="3" fill="currentColor"/>
+    </svg>
+  ),
+  Image: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+    </svg>
+  ),
+  Link: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </svg>
+  ),
 };
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// ── Blank forms ───────────────────────────────────────────────────────────────
+const BLANK_CLINIC = {
+  name: '',
+  address: '',
+  phone: '',
+  email: '',
+  startDay: 'Monday',
+  endDay: 'Friday',
+  openTime: '08:00',
+  closeTime: '17:00',
+  closedDaysList: [],
+  hasSecondarySchedule: false,
+  secondaryStartDay: 'Saturday',
+  secondaryEndDay: 'Saturday',
+  secondaryOpenTime: '08:00',
+  secondaryCloseTime: '12:00',
+  latitude: '',
+  longitude: '',
+};
+
+const BLANK_AD = {
+  title: '',
+  description: '',
+  imageUrl: '',
+  targetUrl: '',
+  isActive: true,
+  startDate: '',
+  endDate: '',
+};
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function formatDate(ts) {
+  if (!ts) return '—';
+  if (ts.toDate) return ts.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (typeof ts === 'string') return ts;
+  return '—';
+}
+
+function fmt12(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+function formatSingleSchedule(startDay, endDay, openTime, closeTime, closedDaysList = []) {
+  if (!startDay) return '';
+  let rangeStr = startDay === endDay ? startDay : `${startDay} to ${endDay}`;
+  if ((startDay === 'Monday' || startDay === 'Mon') && (endDay === 'Sunday' || endDay === 'Sun')) {
+    rangeStr = 'Monday to Sunday (Everyday)';
+  }
+  if (closedDaysList && closedDaysList.length > 0) {
+    rangeStr += ` (Closed ${closedDaysList.join(', ')})`;
+  }
+  const timeStr = (openTime || closeTime) ? ` (${fmt12(openTime)} – ${fmt12(closeTime)})` : '';
+  return rangeStr + timeStr;
+}
+
+function buildHoursString(data) {
+  if (!data) return '';
+  if (typeof data === 'string') {
+    const [startDay, endDay, openTime, closeTime] = arguments;
+    return formatSingleSchedule(startDay, endDay, openTime, closeTime);
+  }
+  const primary = formatSingleSchedule(data.startDay, data.endDay, data.openTime, data.closeTime, data.closedDaysList);
+  if (data.hasSecondarySchedule) {
+    const secondary = formatSingleSchedule(data.secondaryStartDay || 'Saturday', data.secondaryEndDay || 'Saturday', data.secondaryOpenTime, data.secondaryCloseTime);
+    if (secondary) {
+      return `${primary}, ${secondary}`;
+    }
+  }
+  return primary;
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
+  // Auth
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState('');
@@ -66,216 +211,49 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // Navigation
+  const [activeTab, setActiveTab] = useState('clinics');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Database States
-  const [users, setUsers] = useState([]);
-  const [healthRecords, setHealthRecords] = useState([]);
-  const [transactions, setTransactions] = useState([]);
 
-  // Auth state change subscription with role check
+  // Firestore data
+  const [clinics, setClinics] = useState([]);
+  const [ads, setAds] = useState([]);
+
+  // Modal state
+  const [clinicModal, setClinicModal] = useState({ open: false, mode: 'add', data: BLANK_CLINIC, id: null });
+  const [adModal, setAdModal] = useState({ open: false, mode: 'add', data: BLANK_AD, id: null });
+  const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null, title: '' });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // ── Auth listener ──
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        try {
-          const userDocRef = doc(db, 'users', currentUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            const role = userData.role;
-            
-            if (role === 'admin' || currentUser.email === 'admin@pawscura.com') {
-              if (role !== 'admin' && currentUser.email === 'admin@pawscura.com') {
-                await updateDoc(userDocRef, { role: 'admin' });
-              }
-              setUser(currentUser);
-            } else {
-              setLoginError('Access Denied: Not an administrator.');
-              await signOut(auth);
-              setUser(null);
-            }
-          } else {
-            // Auto create system admin document if email matches default
-            if (currentUser.email === 'admin@pawscura.com') {
-              await setDoc(userDocRef, {
-                email: currentUser.email,
-                name: 'System Admin',
-                role: 'admin',
-                isPremium: true
-              });
-              setUser(currentUser);
-            } else {
-              setLoginError('Access Denied: Admin profile record not found.');
-              await signOut(auth);
-              setUser(null);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching admin role:', err);
-          setLoginError('Authentication failed due to access validation error.');
-          await signOut(auth);
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
       setAuthLoading(false);
     });
-    return unsubscribe;
+    return unsub;
   }, []);
 
-  // Detail Modal states (Matches flowchart Select/Display nodes)
-  const [selectedScan, setSelectedScan] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedTrans, setSelectedTrans] = useState(null);
-
-  // Urgency Filter
-  const [scanUrgencyFilter, setScanUrgencyFilter] = useState('All');
-
-  // Firestore subscribers
+  // ── Firestore listeners (only when logged in) ──
   useEffect(() => {
     if (!user) return;
-    
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setUsers(data);
+
+    const unsubClinics = onSnapshot(collection(db, 'vetClinics'), (snap) => {
+      setClinics(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
-
-    const unsubRecords = onSnapshot(collection(db, 'healthRecords'), (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const item = doc.data();
-        let displayDate = item.date;
-        if (item.date && item.date.toDate) {
-          displayDate = item.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-        return { id: doc.id, ...item, displayDate };
-      });
-      data.sort((a, b) => {
-        const timeA = a.date?.toMillis ? a.date.toMillis() : Date.parse(a.date) || 0;
-        const timeB = b.date?.toMillis ? b.date.toMillis() : Date.parse(b.date) || 0;
-        return timeB - timeA;
-      });
-      setHealthRecords(data);
-    });
-
-    const unsubTransactions = onSnapshot(collection(db, 'payments'), (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const item = doc.data();
-        let displayDate = 'N/A';
-        if (item.date && item.date.toDate) {
-          displayDate = item.date.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        }
-        return { 
-          id: doc.id, 
-          ...item, 
-          price: item.amount !== undefined ? item.amount : (item.price || 0), 
-          planName: item.planName || (item.amount > 0 ? 'Premium' : 'Free'), 
-          displayDate 
-        };
-      });
-      data.sort((a, b) => {
-        const timeA = a.date?.toMillis ? a.date.toMillis() : Date.parse(a.date) || 0;
-        const timeB = b.date?.toMillis ? b.date.toMillis() : Date.parse(b.date) || 0;
-        return timeB - timeA;
-      });
-      setTransactions(data);
+    const unsubAds = onSnapshot(collection(db, 'ads'), (snap) => {
+      setAds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
     return () => {
-      unsubUsers();
-      unsubRecords();
-      unsubTransactions();
+      unsubClinics();
+      unsubAds();
     };
   }, [user]);
 
-  // Update user premium status
-  const handleTogglePremium = async (userId, currentVal) => {
-    try {
-      const docRef = doc(db, 'users', userId);
-      await updateDoc(docRef, { isPremium: !currentVal });
-      
-      await addDoc(collection(db, 'payments'), {
-        userId: userId,
-        subscriptionId: 'admin_override',
-        amount: !currentVal ? 9.99 : 0,
-        status: !currentVal ? 'Admin Granted' : 'Admin Cancelled',
-        method: 'Admin Allocation',
-        date: new Date(),
-        // Keep these fields for backward compatibility in the dashboard lists
-        userEmail: users.find(u => u.id === userId)?.email || 'admin@pawscura.com',
-        planName: !currentVal ? 'Premium' : 'Free'
-      });
-    } catch (e) {
-      console.error('Error toggling premium:', e);
-      alert('Failed to update premium status.');
-    }
-  };
-
-  // Suspend/Reactivate user (Flowchart: Suspend Account -> Account Suspended)
-  const handleToggleSuspension = async (userId, currentVal) => {
-    try {
-      const docRef = doc(db, 'users', userId);
-      await updateDoc(docRef, { isSuspended: !currentVal });
-      alert(`User account has been successfully ${!currentVal ? 'SUSPENDED' : 'REACTIVATED'}.`);
-      if (selectedUser && selectedUser.id === userId) {
-        setSelectedUser(prev => ({ ...prev, isSuspended: !currentVal }));
-      }
-    } catch (e) {
-      console.error('Error toggling suspension:', e);
-      alert('Failed to update account suspension.');
-    }
-  };
-
-  // Simulate Password Reset (Flowchart: Reset Password -> Password Reset)
-  const handleResetPassword = (email) => {
-    if (!email) {
-      alert('Cannot send password reset link: No email registered.');
-      return;
-    }
-    alert(`Password reset link has been successfully dispatched to ${email}.`);
-  };
-
-  // Update user role status
-  const handleToggleRole = async (userId, currentRole) => {
-    const newRole = currentRole === 'admin' ? 'user' : 'admin';
-    if (userId === auth.currentUser?.uid && newRole === 'user') {
-      if (!window.confirm('Warning: You are demoting yourself from administrator. You will lose access to this portal immediately. Proceed?')) {
-        return;
-      }
-    }
-    try {
-      const docRef = doc(db, 'users', userId);
-      await updateDoc(docRef, { role: newRole });
-      alert(`User role has been updated to ${newRole.toUpperCase()}.`);
-      if (selectedUser && selectedUser.id === userId) {
-        setSelectedUser(prev => ({ ...prev, role: newRole }));
-      }
-    } catch (e) {
-      console.error('Error toggling role:', e);
-      alert('Failed to update user role.');
-    }
-  };
-
-
-  // Delete transaction log
-  const handleDeleteTransaction = async (transId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this transaction record?')) {
-      return;
-    }
-    try {
-      await deleteDoc(doc(db, 'payments', transId));
-      setSelectedTrans(null);
-      alert('Transaction log deleted successfully.');
-    } catch (err) {
-      console.error('Error deleting transaction:', err);
-      alert('Failed to delete transaction log.');
-    }
-  };
-
-  // Authenticate Admin User
+  // ── Login ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -287,9 +265,8 @@ export default function App() {
     try {
       await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword.trim());
     } catch (err) {
-      console.error('Error logging in:', err);
       let msg = 'Authentication failed. Please check your credentials.';
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      if (['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
         msg = 'Invalid email address or passcode.';
       } else if (err.code === 'auth/invalid-email') {
         msg = 'Invalid email format.';
@@ -300,261 +277,185 @@ export default function App() {
     }
   };
 
-  // Dashboard calculations
-  const stats = useMemo(() => {
-    const totalUsers = users.length;
-    const premiumUsers = users.filter(u => u.isPremium).length;
-    const conversionRate = totalUsers > 0 ? ((premiumUsers / totalUsers) * 100).toFixed(1) : 0;
-    
-    const successfulPayments = transactions.filter(t => t.status === 'Success' || t.status === 'Admin Granted');
-    const totalRevenue = successfulPayments.reduce((sum, t) => sum + (parseFloat(t.price) || 0), 0).toFixed(2);
-
-    const urgentScans = healthRecords.filter(r => r.status?.toLowerCase() === 'urgent' || r.status?.toLowerCase() === 'immediate care').length;
-
-    // AI Classification: percentage of safe/healthy scans dynamically calculated from data
-    const safeScans = healthRecords.filter(r => r.status?.toLowerCase() === 'safe' || r.status?.toLowerCase() === 'no concerns detected').length;
-    const safeScanRate = healthRecords.length > 0 ? ((safeScans / healthRecords.length) * 100).toFixed(1) : 0;
-
-    return {
-      totalUsers,
-      premiumUsers,
-      conversionRate,
-      totalRevenue,
-      totalScans: healthRecords.length,
-      urgentScans,
-      safeScanRate
-    };
-  }, [users, healthRecords, transactions]);
-
-  // Tab Filtering & Query Searches
-  const filteredUsers = useMemo(() => {
-    return users.filter(u => 
-      (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      u.id.includes(searchQuery)
-    );
-  }, [users, searchQuery]);
-
-
-
-  const filteredScans = useMemo(() => {
-    let scans = healthRecords;
-    if (scanUrgencyFilter !== 'All') {
-      scans = scans.filter(s => {
-        if (scanUrgencyFilter === 'Urgent') return s.status?.toLowerCase() === 'urgent' || s.status?.toLowerCase() === 'immediate care';
-        if (scanUrgencyFilter === 'Moderate') return s.status?.toLowerCase() === 'moderate';
-        return s.status?.toLowerCase() === 'safe' || s.status?.toLowerCase() === 'no concerns detected';
-      });
-    }
-    return scans.filter(s => 
-      (s.petName && s.petName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (s.issue && s.issue.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [healthRecords, scanUrgencyFilter, searchQuery]);
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => 
-      t.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.planName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.status && t.status.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [transactions, searchQuery]);
-
-  // Calculate dynamic weekly revenue history from transactions database
-  const weeklyRevenueHistory = useMemo(() => {
-    const now = new Date();
-    const weeks = Array(7).fill(0);
-    const successful = transactions.filter(t => t.status === 'Success' || t.status === 'Admin Granted');
-    
-    successful.forEach(t => {
-      let tDate = new Date();
-      if (t.date) {
-        if (t.date.toDate) {
-          tDate = t.date.toDate();
-        } else {
-          tDate = new Date(t.date);
-        }
-      }
-      const diffTime = Math.abs(now - tDate);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const weekIndex = 6 - Math.floor(diffDays / 7);
-      
-      if (weekIndex >= 0 && weekIndex < 7) {
-        weeks[weekIndex] += parseFloat(t.price) || 0;
-      }
+  // ── Clinic CRUD ──
+  const openAddClinic = () => setClinicModal({ open: true, mode: 'add', data: { ...BLANK_CLINIC }, id: null });
+  const openEditClinic = (clinic) => {
+    const closedDaysList = Array.isArray(clinic.closedDaysList) ? clinic.closedDaysList : [];
+    const startDay = clinic.startDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[0] : 'Monday');
+    const endDay = clinic.endDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[clinic.operatingDays.length - 1] : 'Friday');
+    setClinicModal({
+      open: true, mode: 'edit',
+      data: { ...BLANK_CLINIC, ...clinic, closedDaysList, startDay, endDay },
+      id: clinic.id
     });
-    return weeks;
-  }, [transactions]);
+  };
+  const closeClinicModal = () => setClinicModal(m => ({ ...m, open: false }));
 
-  const maxRevenue = useMemo(() => {
-    const maxVal = Math.max(...weeklyRevenueHistory);
-    return maxVal > 0 ? maxVal : 100;
-  }, [weeklyRevenueHistory]);
-
-  const apiMetrics = useMemo(() => {
-    return [
-      {
-        id: 'maps-js',
-        name: 'Maps JavaScript API',
-        todayCalls: 12,
-        maxQuota: 800,
-        pct: 1.5,
-        costRate: '$7 / 1000 calls',
-        estMonthlyCost: 3.27,
-        theme: 'blue',
-        history: [8, 10, 15, 7, 11, 9, 12],
-      },
-      {
-        id: 'directions',
-        name: 'Directions API',
-        todayCalls: 6,
-        maxQuota: 800,
-        pct: 0.8,
-        costRate: '$5 / 1000 calls',
-        estMonthlyCost: 1.26,
-        theme: 'purple',
-        history: [4, 5, 8, 3, 6, 5, 6],
-      },
-      {
-        id: 'places',
-        name: 'Places API',
-        todayCalls: 3,
-        maxQuota: 1000,
-        pct: 0.3,
-        costRate: '$17 / 1000 calls',
-        estMonthlyCost: 2.05,
-        theme: 'orange',
-        history: [2, 4, 3, 1, 2, 3, 3],
-      },
-      {
-        id: 'geocoding',
-        name: 'Geocoding API',
-        todayCalls: 2,
-        maxQuota: 1000,
-        pct: 0.2,
-        costRate: '$5 / 1000 calls',
-        estMonthlyCost: 0.32,
-        theme: 'green',
-        history: [1, 2, 3, 1, 1, 2, 2],
+  const handleSaveClinic = async (e) => {
+    e.preventDefault();
+    if (!clinicModal.data.name.trim()) { alert('Clinic name is required.'); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        name: clinicModal.data.name.trim(),
+        address: clinicModal.data.address.trim(),
+        phone: clinicModal.data.phone.trim(),
+        email: clinicModal.data.email.trim(),
+        startDay: clinicModal.data.startDay || 'Monday',
+        endDay: clinicModal.data.endDay || 'Friday',
+        openTime: clinicModal.data.openTime || '',
+        closeTime: clinicModal.data.closeTime || '',
+        closedDaysList: clinicModal.data.closedDaysList || [],
+        hasSecondarySchedule: Boolean(clinicModal.data.hasSecondarySchedule),
+        secondaryStartDay: clinicModal.data.secondaryStartDay || 'Saturday',
+        secondaryEndDay: clinicModal.data.secondaryEndDay || 'Saturday',
+        secondaryOpenTime: clinicModal.data.secondaryOpenTime || '',
+        secondaryCloseTime: clinicModal.data.secondaryCloseTime || '',
+        hours: buildHoursString(clinicModal.data),
+        latitude: clinicModal.data.latitude ? parseFloat(clinicModal.data.latitude) : null,
+        longitude: clinicModal.data.longitude ? parseFloat(clinicModal.data.longitude) : null,
+        updatedAt: serverTimestamp(),
+      };
+      if (clinicModal.mode === 'add') {
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db, 'vetClinics'), payload);
+      } else {
+        await updateDoc(doc(db, 'vetClinics', clinicModal.id), payload);
       }
-    ];
-  }, []);
+      closeClinicModal();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save clinic. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const filteredApis = useMemo(() => {
-    return apiMetrics.filter(api => 
-      api.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [apiMetrics, searchQuery]);
+  const triggerDeleteClinic = (id, name) => setDeleteModal({ open: true, type: 'clinic', id, title: name });
 
-  const totalEstCost = useMemo(() => {
-    return apiMetrics.reduce((sum, api) => sum + api.estMonthlyCost, 0).toFixed(2);
-  }, [apiMetrics]);
+  // ── Ads CRUD ──
+  const openAddAd = () => setAdModal({ open: true, mode: 'add', data: { ...BLANK_AD }, id: null });
+  const openEditAd = (ad) => setAdModal({ open: true, mode: 'edit', data: { ...ad }, id: ad.id });
+  const closeAdModal = () => setAdModal(m => ({ ...m, open: false }));
 
-  const creditLimit = 200;
-  const pctCreditUsed = ((parseFloat(totalEstCost) / creditLimit) * 100).toFixed(1);
+  const handleSaveAd = async (e) => {
+    e.preventDefault();
+    if (!adModal.data.title.trim()) { alert('Ad title is required.'); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        title: adModal.data.title.trim(),
+        description: adModal.data.description.trim(),
+        imageUrl: adModal.data.imageUrl.trim(),
+        targetUrl: adModal.data.targetUrl.trim(),
+        isActive: Boolean(adModal.data.isActive),
+        startDate: adModal.data.startDate || null,
+        endDate: adModal.data.endDate || null,
+        updatedAt: serverTimestamp(),
+      };
+      if (adModal.mode === 'add') {
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db, 'ads'), payload);
+      } else {
+        await updateDoc(doc(db, 'ads', adModal.id), payload);
+      }
+      closeAdModal();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save ad. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
+  const triggerDeleteAd = (id, title) => setDeleteModal({ open: true, type: 'ad', id, title });
+
+  // ── Delete Confirmation Handlers ──
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteModal({ open: false, type: '', id: null, title: '' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
+    try {
+      if (deleteModal.type === 'clinic') {
+        await deleteDoc(doc(db, 'vetClinics', deleteModal.id));
+      } else if (deleteModal.type === 'ad') {
+        await deleteDoc(doc(db, 'ads', deleteModal.id));
+      }
+      closeDeleteModal();
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to delete ${deleteModal.type === 'clinic' ? 'clinic' : 'advertisement'}. Please try again.`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleToggleAdActive = async (id, current) => {
+    try {
+      await updateDoc(doc(db, 'ads', id), { isActive: !current, updatedAt: serverTimestamp() });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to toggle ad status.');
+    }
+  };
+
+  // ── Filtered lists ──
+  const filteredClinics = clinics.filter(c =>
+    c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.address?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredAds = ads.filter(a =>
+    a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // ── Loading screen ──
   if (authLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--color-canvas)', color: 'var(--color-text-primary)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--color-canvas)' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '40px', height: '40px', border: '3px solid var(--color-border)', borderTopColor: 'var(--color-brand)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px auto' }} />
-          <p style={{ fontWeight: '600', fontSize: '14px' }}>Loading Portal...</p>
+          <p style={{ fontWeight: '600', fontSize: '14px', color: 'var(--color-text-secondary)' }}>Loading Portal...</p>
         </div>
       </div>
     );
   }
 
+  // ── Login screen ──
   if (!user) {
     return (
-      <div className="login-container" style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: 'var(--color-canvas)',
-        fontFamily: 'var(--font-sans)',
-        padding: '16px'
-      }}>
-        <div className="login-card" style={{
-          width: '100%',
-          maxWidth: '400px',
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          padding: '40px',
-          boxSizing: 'border-box'
-        }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--color-canvas)', fontFamily: 'var(--font-sans)', padding: '16px' }}>
+        <div style={{ width: '100%', maxWidth: '420px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: '44px 40px', boxSizing: 'border-box' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="PawsCura Logo" style={{ width: '48px', height: 'auto', margin: '0 auto 16px auto', display: 'block', objectFit: 'contain' }} />
-            <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-text-primary)', margin: 0 }}>PawsCura Portal</h2>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>Sign in to access administrator dashboard controls</p>
+            <div className="login-logo-wrapper">
+              <img src="/logo.png" alt="PawsCura Logo" className="login-logo-img" />
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '8px', fontWeight: '500' }}>Sign in to manage clinics and advertisements</p>
           </div>
-          
+
           {loginError && (
-            <div style={{
-              backgroundColor: 'var(--color-danger-bg)',
-              border: '1px solid var(--color-danger)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '12px',
-              marginBottom: '20px',
-              color: 'var(--color-danger)',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+            <div style={{ backgroundColor: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-sm)', padding: '12px', marginBottom: '20px', color: 'var(--color-danger)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Icons.Alert />
               <span style={{ fontWeight: '500' }}>{loginError}</span>
             </div>
           )}
-          
+
           <form onSubmit={handleLogin}>
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600' }}>Email Address</label>
-              <input 
-                type="email" 
-                className="form-control"
-                placeholder="admin@pawscura.com"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                style={{ width: '100%', padding: '12px', fontSize: '14px' }}
-              />
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input type="email" className="form-control" placeholder="admin@pawscura.com" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
             </div>
-            
             <div className="form-group" style={{ marginBottom: '28px' }}>
-              <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600' }}>Passcode</label>
-              <input 
-                type="password" 
-                className="form-control"
-                placeholder="••••••••"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                style={{ width: '100%', padding: '12px', fontSize: '14px' }}
-              />
+              <label className="form-label">Passcode</label>
+              <input type="password" className="form-control" placeholder="••••••••" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={loginLoading}
-              style={{ 
-                width: '100%', 
-                padding: '12px', 
-                fontSize: '14px', 
-                fontWeight: '700',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: 'linear-gradient(135deg, hsl(200,95%,30%) 0%, hsl(200,95%,44%) 100%)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--radius-md)'
-              }}
-            >
+            <button type="submit" className="btn-primary" disabled={loginLoading}
+              style={{ width: '100%', padding: '13px', fontSize: '14px', fontWeight: '700', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, hsl(200,95%,30%) 0%, hsl(200,95%,44%) 100%)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)' }}>
               {loginLoading ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
@@ -563,59 +464,40 @@ export default function App() {
     );
   }
 
+  // ── Admin layout ──
   return (
     <div className="admin-container">
-      {/* ── SIDEBAR NAVIGATION ── */}
+      {/* ── SIDEBAR ── */}
       <aside className="sidebar">
         <div className="brand-section">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="PawsCura Logo" style={{ width: '36px', height: 'auto', objectFit: 'contain', display: 'block' }} />
-          <h1 className="brand-name">PawsCura</h1>
+          <div className="brand-logo-wrapper">
+            <img src="/logo.png" alt="PawsCura Logo" className="brand-logo-img" />
+          </div>
         </div>
-        
+
         <ul className="nav-list">
           <li>
-            <div 
-              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('dashboard'); setSearchQuery(''); }}
+            <div
+              className={`nav-item ${activeTab === 'clinics' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('clinics'); setSearchQuery(''); }}
             >
-              <span className="nav-icon"><Icons.Dashboard /></span>
-              <span>Dashboard</span>
+              <span className="nav-icon"><Icons.Clinic /></span>
+              <span>Vet Clinics</span>
             </div>
           </li>
           <li>
-            <div 
-              className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('users'); setSearchQuery(''); }}
+            <div
+              className={`nav-item ${activeTab === 'ads' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('ads'); setSearchQuery(''); }}
             >
-              <span className="nav-icon"><Icons.Users /></span>
-              <span>App Users</span>
+              <span className="nav-icon"><Icons.Ads /></span>
+              <span>Advertisements</span>
             </div>
           </li>
-          <li>
-            <div 
-              className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('transactions'); setSearchQuery(''); }}
-            >
-              <span className="nav-icon"><Icons.Transactions /></span>
-              <span>Transactions</span>
-            </div>
-          </li>
-
-          <li>
-            <div 
-              className={`nav-item ${activeTab === 'api-usage' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('api-usage'); setSearchQuery(''); }}
-            >
-              <span className="nav-icon"><Icons.ApiUsage /></span>
-              <span>API Usage</span>
-            </div>
-          </li>
-
         </ul>
 
-        {/* Sidebar Footer with Sign Out button */}
         <div className="sidebar-footer">
-          <div 
+          <div
             className="nav-item nav-item-logout"
             onClick={() => {
               if (window.confirm('Are you sure you want to sign out of the PawsCura Portal?')) {
@@ -634,852 +516,653 @@ export default function App() {
         <header className="header-row">
           <div>
             <h2 className="header-title">
-              {activeTab === 'dashboard' && 'Operations Dashboard'}
-              {activeTab === 'users' && 'User Management'}
-              {activeTab === 'transactions' && 'Billing & Transactions'}
-              {activeTab === 'scans' && 'AI Assessment Center'}
-              {activeTab === 'api-usage' && 'API & Quota Monitor'}
+              {activeTab === 'clinics' && 'Veterinary Clinic Directory'}
+              {activeTab === 'ads' && 'Advertisements Manager'}
             </h2>
             <p className="header-subtitle">
-              {activeTab === 'dashboard' && 'Real-time telemetry and subscription health metrics'}
-              {activeTab === 'users' && `Listing ${filteredUsers.length} total mobile accounts`}
-              {activeTab === 'transactions' && `Tracking ${filteredTransactions.length} processed invoices`}
-              {activeTab === 'scans' && `Analyzing ${filteredScans.length} diagnostic scan entries`}
-              {activeTab === 'api-usage' && 'Google Maps Platform application-level telemetry and billing status'}
+              {activeTab === 'clinics' && `${filteredClinics.length} clinic${filteredClinics.length !== 1 ? 's' : ''} listed`}
+              {activeTab === 'ads' && `${filteredAds.length} ad${filteredAds.length !== 1 ? 's' : ''} · ${ads.filter(a => a.isActive).length} active`}
             </p>
           </div>
 
-          {/* Search Box */}
-          {activeTab !== 'dashboard' && (
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* Search */}
             <div className="search-input-wrap">
               <span className="search-icon"><Icons.Search /></span>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="search-input"
-                placeholder={
-                  activeTab === 'users' ? 'Search by name, email, or ID...' :
-                  activeTab === 'scans' ? 'Search by pet, issue, or notes...' :
-                  activeTab === 'api-usage' ? 'Search APIs...' :
-                  'Search by email or plan...'
-                }
+                placeholder={activeTab === 'clinics' ? 'Search clinics...' : 'Search ads...'}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-          )}
+
+            {/* Add button */}
+            {activeTab === 'clinics' && (
+              <button
+                className="btn-primary"
+                onClick={openAddClinic}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
+              >
+                <Icons.Plus /> Add Clinic
+              </button>
+            )}
+            {activeTab === 'ads' && (
+              <button
+                className="btn-primary"
+                onClick={openAddAd}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
+              >
+                <Icons.Plus /> Add Ad
+              </button>
+            )}
+          </div>
         </header>
 
-        {/* ── DASHBOARD TAB ── */}
-        {activeTab === 'dashboard' && (
-          <>
-            {/* Welcome Banner */}
-            <div className="welcome-banner" style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'linear-gradient(135deg, hsl(200,95%,30%) 0%, hsl(220,80%,22%) 60%, hsl(260,60%,20%) 100%)',
-              borderRadius: 'var(--radius-xl)',
-              padding: '36px 40px',
-              marginBottom: '28px',
-              boxShadow: '0 8px 32px rgba(14,165,233,0.25)',
-              overflow: 'hidden',
-              position: 'relative',
-              height: '200px',
-              flexShrink: 0,
-              boxSizing: 'border-box'
-            }}>
-              {/* Decorative blur circles */}
-              <div style={{ position:'absolute', top:'-40px', right:'220px', width:'200px', height:'200px', borderRadius:'50%', background:'rgba(255,255,255,0.05)', pointerEvents:'none' }} />
-              <div style={{ position:'absolute', bottom:'-60px', right:'100px', width:'260px', height:'260px', borderRadius:'50%', background:'rgba(255,255,255,0.04)', pointerEvents:'none' }} />
-              <div style={{ flex: 1, paddingRight: '32px', position:'relative', zIndex:1, overflow:'hidden' }}>
-                <p style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: '0.12em', textTransform:'uppercase', marginBottom:'10px' }}>Admin Control Center</p>
-                <h3 style={{ fontSize: '28px', fontWeight: '900', color: '#ffffff', lineHeight: '1.25', marginBottom: '12px' }}>Welcome to the PawsCura Portal</h3>
-                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.78)', lineHeight: '1.7', maxWidth: '520px' }}>
-                  Manage user subscriptions, search pet records, and review transaction invoices.
-                </p>
-              </div>
-              <div style={{ flexShrink: 0, width: '160px', height: '160px', position:'relative', zIndex:1 }}>
-                <img 
-                  src={`${import.meta.env.BASE_URL}Landing.png`} 
-                  alt="PawsCura App Mascot" 
-                  style={{ 
-                    width: '160px',
-                    height: '160px',
-                    objectFit: 'contain',
-                    display: 'block',
-                    filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.35))'
-                  }} 
-                />
-              </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-primary">
-                  <Icons.Users />
+        {/* ── VET CLINICS TAB ── */}
+        {activeTab === 'clinics' && (
+          <div className="panel" style={{ flex: 1 }}>
+            {filteredClinics.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '80px 0', gap: '16px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--color-brand-transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-brand)' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
                 </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.totalUsers}</span>
-                  <span className="stat-label">Total Users</span>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontWeight: '700', fontSize: '15px', color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                    {searchQuery ? 'No clinics matched your search.' : 'No clinics yet.'}
+                  </p>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                    {searchQuery ? 'Try a different keyword.' : 'Click "Add Clinic" to add the first directory entry.'}
+                  </p>
                 </div>
               </div>
-
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-success">
-                  <span style={{ fontSize: '20px', fontWeight: 'bold' }}>$</span>
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">${stats.totalRevenue}</span>
-                  <span className="stat-label">Total Revenue</span>
-                </div>
-              </div>
-
-
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-primary">
-                  <Icons.Scans />
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.totalScans}</span>
-                  <span className="stat-label">Diagnostic Scans</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Conversion panel & Revenue Charts (Flowchart: Display Revenue Charts) */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-              <div className="panel">
-                <h3 className="panel-title" style={{ marginBottom: '16px' }}>Subscription Conversion</h3>
-                <div style={{ display: 'flex', gap: '32px', marginBottom: '20px' }}>
-                  <div>
-                    <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>Premium Subscribers</span>
-                    <h4 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--color-brand)', marginTop: '4px' }}>
-                      {stats.premiumUsers} <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)', fontWeight: 'normal' }}>users</span>
-                    </h4>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>Conversion Ratio</span>
-                    <h4 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--color-success)', marginTop: '4px' }}>
-                      {stats.conversionRate}%
-                    </h4>
-                  </div>
-                </div>
-                <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${stats.conversionRate}%`, backgroundColor: 'var(--color-brand)', borderRadius: 'var(--radius-full)' }}></div>
-                </div>
-              </div>
-
-              <div className="panel">
-                <h3 className="panel-title" style={{ marginBottom: '16px' }}>Weekly Revenue Progression</h3>
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '100px', paddingBottom: '10px' }}>
-                  {weeklyRevenueHistory.map((rev, index) => {
-                    const heightPercent = (rev / maxRevenue) * 100;
-                    return (
-                      <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                        <div style={{ 
-                          height: `${heightPercent}px`, 
-                          width: '18px', 
-                          backgroundColor: 'var(--color-brand)', 
-                          borderRadius: 'var(--radius-xs)',
-                          minHeight: '4px'
-                        }}></div>
-                        <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', marginTop: '4px' }}>W{index + 1}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Transactions + Last Overview */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px', marginBottom: '24px' }}>
-
-              {/* Recent Transactions */}
-              <div className="panel" style={{ marginBottom: 0 }}>
-                <div className="panel-header">
-                  <h3 className="panel-title">Recent Transactions</h3>
-                  <button
-                    className="filter-tab active"
-                    onClick={() => setActiveTab('transactions')}
-                  >
-                    View All
-                  </button>
-                </div>
-                <div className="table-container">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>User</th>
-                        <th>Plan</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.slice(0, 5).map(trans => (
-                        <tr key={trans.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedTrans(trans)}>
-                          <td style={{ fontSize: '12px', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {trans.userEmail}
-                          </td>
-                          <td>
-                            <span className="badge badge-safe" style={{ backgroundColor: 'var(--color-brand-transparent)', color: 'var(--color-brand)' }}>
-                              {trans.planName}
-                            </span>
-                          </td>
-                          <td style={{ fontWeight: '700' }}>${trans.price.toFixed(2)}</td>
-                          <td>
-                            <span className={`badge ${
-                              trans.status?.toLowerCase().includes('success') || trans.status?.toLowerCase().includes('granted')
-                                ? 'badge-safe' : 'badge-urgent'
-                            }`}>
-                              {trans.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                      {transactions.length === 0 && (
-                        <tr>
-                          <td colSpan="4" className="empty-state">No transactions recorded yet.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Last Overview */}
-              <div className="panel" style={{ marginBottom: 0 }}>
-                <h3 className="panel-title" style={{ marginBottom: '20px' }}>Last Overview</h3>
-
-                {/* Feature: Premium vs Free */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                    <span style={{ color: 'var(--color-text-secondary)' }}>Premium Users</span>
-                    <span style={{ color: 'var(--color-brand)', fontWeight: '700' }}>{stats.premiumUsers}</span>
-                  </div>
-                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${stats.conversionRate}%`, background: 'linear-gradient(90deg, hsl(200,95%,44%), hsl(200,95%,60%))', borderRadius: 'var(--radius-full)' }} />
-                  </div>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>{stats.conversionRate}% conversion rate</span>
-                </div>
-
-                {/* Feature: Free Users */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                    <span style={{ color: 'var(--color-text-secondary)' }}>Free Tier Users</span>
-                    <span style={{ color: 'var(--color-text-primary)', fontWeight: '700' }}>{stats.totalUsers - stats.premiumUsers}</span>
-                  </div>
-                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${stats.totalUsers > 0 ? (((stats.totalUsers - stats.premiumUsers) / stats.totalUsers) * 100).toFixed(1) : 0}%`, backgroundColor: 'var(--color-warning)', borderRadius: 'var(--radius-full)' }} />
-                  </div>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>on free plan</span>
-                </div>
-
-                {/* Feature: AI Scans Safe Rate */}
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                    <span style={{ color: 'var(--color-text-secondary)' }}>Safe Scan Rate</span>
-                    <span style={{ color: 'var(--color-success)', fontWeight: '700' }}>{stats.safeScanRate}%</span>
-                  </div>
-                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${stats.safeScanRate}%`, backgroundColor: 'var(--color-success)', borderRadius: 'var(--radius-full)' }} />
-                  </div>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>of diagnostics are non-urgent</span>
-                </div>
-
-                {/* Feature: Urgent Scans */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
-                    <span style={{ color: 'var(--color-text-secondary)' }}>Urgent Cases</span>
-                    <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>{stats.urgentScans}</span>
-                  </div>
-                  <div style={{ height: '7px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${stats.totalScans > 0 ? ((stats.urgentScans / stats.totalScans) * 100).toFixed(1) : 0}%`, backgroundColor: 'var(--color-danger)', borderRadius: 'var(--radius-full)' }} />
-                  </div>
-                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>require immediate care</span>
-                </div>
-              </div>
-
-            </div>
-          </>
-        )}
-
-        {/* ── USERS TAB ── */}
-        {activeTab === 'users' && (
-          <div className="panel">
-            <h3 className="panel-title" style={{ marginBottom: '20px' }}>Application Access</h3>
-            <div className="table-container">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>User ID</th>
-                    <th>Email Address</th>
-                    <th>System Role</th>
-                    <th>Premium Access</th>
-                    <th>Account Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map(userItem => (
-                    <tr key={userItem.id} style={{ cursor: 'pointer', opacity: userItem.isSuspended ? 0.65 : 1 }} onClick={() => setSelectedUser(userItem)}>
-                      <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{userItem.id}</td>
-                      <td>{userItem.email || 'guest@pawscura.com'}</td>
-                      <td>
-                        <span className={`badge ${userItem.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`} style={{
-                          backgroundColor: userItem.role === 'admin' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                          color: userItem.role === 'admin' ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)',
-                          border: userItem.role === 'admin' ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)'
-                        }}>
-                          {userItem.role === 'admin' ? 'Admin' : 'User'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${userItem.isPremium ? 'badge-safe' : 'badge-moderate'}`}>
-                          {userItem.isPremium ? 'Premium Sub' : 'Free Tier'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${userItem.isSuspended ? 'badge-urgent' : 'badge-safe'}`}>
-                          {userItem.isSuspended ? 'Suspended' : 'Active'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredUsers.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="empty-state">No app user directories matched search queries.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── TRANSACTIONS TAB ── */}
-        {activeTab === 'transactions' && (
-          <div className="panel">
-            <div className="panel-header" style={{ marginBottom: '20px' }}>
-              <h3 className="panel-title" style={{ margin: 0 }}>Invoicing System</h3>
-            </div>
-            <div className="table-container">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Timestamp</th>
-                    <th>User Email</th>
-                    <th>Plan Selected</th>
-                    <th>Amount Paid</th>
-                    <th>Cardholder Reference</th>
-                    <th>Transaction Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTransactions.map(trans => (
-                    <tr key={trans.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedTrans(trans)}>
-                      <td>{trans.displayDate}</td>
-                      <td>{trans.userEmail}</td>
-                      <td>
-                        <span className="badge badge-safe" style={{ backgroundColor: 'var(--color-brand-transparent)', color: 'var(--color-brand)' }}>
-                          {trans.planName}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: 'bold' }}>
-                        ${trans.price.toFixed(2)}
-                      </td>
-                      <td>{trans.cardholderName || 'Admin Action'}</td>
-                      <td>
-                        <span className={`badge ${
-                          trans.status?.toLowerCase().includes('success') || trans.status?.toLowerCase().includes('granted')
-                            ? 'badge-safe' 
-                            : 'badge-urgent'
-                        }`}>
-                          {trans.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredTransactions.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="empty-state">No billing records found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── DIAGNOSTIC LOGS TAB (Flowchart: Manage AI Agent / Monitor Usage) ── */}
-        {activeTab === 'scans' && (
-          <>
-            {/* Monitor Usage & Classification analytics */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-primary">
-                  <Icons.Scans />
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.totalScans}</span>
-                  <span className="stat-label">Total AI Queries</span>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-success">
-                  <Icons.Check />
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.safeScanRate}%</span>
-                  <span className="stat-label">Safe Diagnostic Ratio</span>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon-wrap stat-icon-warning">
-                  <Icons.Alert />
-                </div>
-                <div className="stat-info">
-                  <span className="stat-value">{stats.urgentScans}</span>
-                  <span className="stat-label">High Severity Scans</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="filter-tabs">
-              {['All', 'Urgent', 'Moderate', 'Safe'].map(tab => (
-                <div 
-                  key={tab} 
-                  className={`filter-tab ${scanUrgencyFilter === tab ? 'active' : ''}`}
-                  onClick={() => setScanUrgencyFilter(tab)}
-                >
-                  {tab} Scans
-                </div>
-              ))}
-            </div>
-
-            <div className="panel">
+            ) : (
               <div className="table-container">
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Pet</th>
-                      <th>Suspected Condition</th>
-                      <th>Veterinary Urgency</th>
-                      <th>Assigned Vet</th>
+                      <th>Clinic Name</th>
+                      <th>Address</th>
+                      <th>Phone</th>
+                      <th>Hours</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredScans.map(scan => (
-                      <tr key={scan.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedScan(scan)}>
-                        <td>{scan.displayDate || scan.date}</td>
-                        <td>{scan.petName}</td>
-                        <td>{scan.issue}</td>
+                    {filteredClinics.map(clinic => (
+                      <tr key={clinic.id}>
                         <td>
-                          <span className={`badge ${
-                            scan.status?.toLowerCase() === 'urgent' || scan.status?.toLowerCase() === 'immediate care' ? 'badge-urgent' :
-                            scan.status?.toLowerCase() === 'moderate' ? 'badge-moderate' : 'badge-safe'
-                          }`}>
-                            {scan.status}
-                          </span>
+                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '3px' }}>{clinic.name}</div>
+                          {clinic.email && <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{clinic.email}</div>}
                         </td>
-                        <td>{scan.vet}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                            <span style={{ marginTop: '2px', color: 'var(--color-text-muted)', flexShrink: 0 }}><Icons.MapPin /></span>
+                            <span style={{ fontSize: '13px' }}>{clinic.address || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Phone /></span>
+                            <span>{clinic.phone || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Clock /></span>
+                            <span>{clinic.hours || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => openEditClinic(clinic)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Edit /> Edit
+                            </button>
+                            <button
+                              onClick={() => triggerDeleteClinic(clinic.id, clinic.name)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Trash /> Delete
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                    {filteredScans.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="empty-state">No diagnostic reports matches.</td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
 
-        {/* ── API USAGE TAB ── */}
-        {activeTab === 'api-usage' && (
-          <>
-            {/* Green Banner Card */}
-            <div className="api-banner-card">
-              <div className="api-banner-info">
-                <h3 className="api-banner-title">API Quota Monitor</h3>
-                <p className="api-banner-text">
-                  Dynamic quotas and estimated costs across Maps, Directions, Places, and Geocoding APIs.
-                </p>
-              </div>
-              <div className="api-banner-cost">
-                ${totalEstCost}
-              </div>
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="stats-grid">
-              {filteredApis.map(api => (
-                <div key={api.id} className="stat-card">
-                  <div className={`stat-icon-wrap stat-icon-${api.theme}`}>
-                    {/* Unique SVG theme indicator */}
-                    {api.theme === 'blue' && <Icons.Scans />}
-                    {api.theme === 'purple' && <Icons.Transactions />}
-                    {api.theme === 'orange' && <Icons.Users />}
-                    {api.theme === 'green' && <Icons.Check />}
-                  </div>
-                  <div className="stat-info">
-                    <span className="stat-value">{api.todayCalls}</span>
-                    <span className="stat-label">{api.name}</span>
-                  </div>
+        {/* ── ADS TAB ── */}
+        {activeTab === 'ads' && (
+          <div className="panel" style={{ flex: 1 }}>
+            {filteredAds.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '80px 0', gap: '16px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--color-brand-transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-brand)' }}>
+                  <Icons.Ads />
                 </div>
-              ))}
-            </div>
-
-            {/* Monthly Credit Usage Panel */}
-            <div className="panel" style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div>
-                  <h3 className="panel-title" style={{ fontSize: '15px', fontWeight: '800' }}>Monthly $200 Free Credit Usage</h3>
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                    Google Maps Platform provides $200 free credit each month.
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontWeight: '700', fontSize: '15px', color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+                    {searchQuery ? 'No ads matched your search.' : 'No advertisements yet.'}
+                  </p>
+                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                    {searchQuery ? 'Try a different keyword.' : 'Click "Add Ad" to create the first promotion.'}
                   </p>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--color-success)' }}>
-                    {pctCreditUsed}% Used
-                  </span>
-                </div>
               </div>
-              
-              {/* Progress bar container */}
-              <div className="credit-progress-wrap">
-                <div 
-                  className="credit-progress-bar" 
-                  style={{ width: `${pctCreditUsed}%` }}
-                />
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '600', marginTop: '8px' }}>
-                <span>$0</span>
-                <span>$200 Maximum</span>
-              </div>
-            </div>
-
-            {/* Detailed API Cards Grid */}
-            <div className="api-cards-grid">
-              {filteredApis.map(api => (
-                <div key={api.id} className={`api-detail-card card-theme-${api.theme}`}>
-                  <div className="api-card-header">
-                    <h4 className="api-card-title">{api.name}</h4>
-                    <div className="api-status-badge">
-                      <span className="status-dot" />
-                      <span>API active</span>
-                    </div>
-                  </div>
-                  
-                  <div className="api-card-pricing-row">
-                    <span className="api-card-rate">{api.costRate}</span>
-                    <div className="api-card-cost-wrap">
-                      <span className="api-card-cost-label">EST. MONTHLY</span>
-                      <span className="api-card-cost">${api.estMonthlyCost.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="api-card-quota-bar-row">
-                    <span className="api-quota-label">Today: {api.todayCalls} calls</span>
-                    <span className="api-quota-pct">{api.pct}%</span>
-                  </div>
-                  
-                  <div className="api-card-progress-wrap">
-                    <div className="api-card-progress-bar" style={{ width: `${api.pct}%` }} />
-                  </div>
-                  
-                  {/* Daily Mini Bar Chart (Last 7 Days) */}
-                  <div className="api-mini-chart-wrap">
-                    <div className="api-chart-bars">
-                      {api.history.map((val, idx) => {
-                        const maxVal = Math.max(...api.history);
-                        const heightPct = maxVal > 0 ? (val / maxVal) * 100 : 10;
-                        const isToday = idx === api.history.length - 1;
-                        return (
-                          <div key={idx} className="chart-bar-container">
-                            <div 
-                              className={`chart-bar-fill ${isToday ? 'bar-today' : ''}`}
-                              style={{ height: `${heightPct}%` }}
-                              title={`Day ${idx + 1}: ${val} calls`}
-                            />
+            ) : (
+              <div className="table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Ad Details</th>
+                      <th>Image URL</th>
+                      <th>Target URL</th>
+                      <th>Duration</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAds.map(ad => (
+                      <tr key={ad.id}>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '4px' }}>{ad.title}</div>
+                          {ad.description && (
+                            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ad.description}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          {ad.imageUrl ? (
+                            <a href={ad.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
+                              <Icons.Image /> Preview
+                            </a>
+                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                        </td>
+                        <td>
+                          {ad.targetUrl ? (
+                            <a href={ad.targetUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <Icons.Link /> {ad.targetUrl.replace(/^https?:\/\//, '')}
+                            </a>
+                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                            {ad.startDate || '—'} → {ad.endDate || '—'}
                           </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => handleToggleAdActive(ad.id, ad.isActive)}
+                            title={ad.isActive ? 'Click to deactivate' : 'Click to activate'}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 auto', padding: '6px 10px', borderRadius: 'var(--radius-sm)', color: ad.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 700, fontSize: '12px', backgroundColor: ad.isActive ? 'var(--color-success-bg)' : 'var(--color-overlay)' }}
+                          >
+                            {ad.isActive ? <><Icons.ToggleOn /> Active</> : <><Icons.ToggleOff /> Inactive</>}
+                          </button>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => openEditAd(ad)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Edit /> Edit
+                            </button>
+                            <button
+                              onClick={() => triggerDeleteAd(ad.id, ad.title)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Trash /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* ══════════════════════════════════════════════════════════
+          CLINIC MODAL — Add / Edit
+      ══════════════════════════════════════════════════════════ */}
+      {clinicModal.open && (
+        <div className="modal-overlay" onClick={closeClinicModal}>
+          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeClinicModal}><Icons.Close /></button>
+            <h3 className="modal-title">
+              {clinicModal.mode === 'add' ? 'Add New Veterinary Clinic' : 'Edit Clinic Information'}
+            </h3>
+
+            <form onSubmit={handleSaveClinic}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Clinic Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. PetCare Animal Hospital"
+                    required
+                    value={clinicModal.data.name}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, name: e.target.value } }))}
+                  />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Address</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. 123 Veterinary Lane, Manila"
+                    value={clinicModal.data.address}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, address: e.target.value } }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="+63 123 123 1234"
+                    value={clinicModal.data.phone}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, phone: e.target.value } }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="clinic@example.com"
+                    value={clinicModal.data.email}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, email: e.target.value } }))}
+                  />
+                </div>
+
+                {/* ── Primary Operating Schedule ── */}
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Operating Days</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '4px' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Start Day</label>
+                      <select
+                        className="form-control"
+                        value={clinicModal.data.startDay || 'Monday'}
+                        onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, startDay: e.target.value } }))}
+                      >
+                        {WEEK_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>End Day</label>
+                      <select
+                        className="form-control"
+                        value={clinicModal.data.endDay || 'Friday'}
+                        onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, endDay: e.target.value } }))}
+                      >
+                        {WEEK_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Closed Days Selector */}
+                  <div style={{ marginTop: '8px' }}>
+                    <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Closed Days mid-week <span style={{ fontWeight: 400 }}>(e.g. Tuesday)</span></label>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {WEEK_DAYS.map(day => {
+                        const isClosed = (clinicModal.data.closedDaysList || []).includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              const list = clinicModal.data.closedDaysList || [];
+                              const next = isClosed ? list.filter(d => d !== day) : [...list, day];
+                              setClinicModal(m => ({ ...m, data: { ...m.data, closedDaysList: next } }));
+                            }}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: 'var(--radius-full)',
+                              border: isClosed ? '2px solid var(--color-danger)' : '2px solid var(--color-border)',
+                              backgroundColor: isClosed ? 'var(--color-danger)' : 'var(--color-canvas)',
+                              color: isClosed ? '#ffffff' : 'var(--color-text-secondary)',
+                              fontWeight: 600,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              fontFamily: 'var(--font-sans)',
+                              transition: 'all 150ms ease',
+                            }}
+                          >
+                            {day}
+                          </button>
                         );
                       })}
                     </div>
-                    <div className="api-chart-labels">
-                      {api.history.map((_, idx) => (
-                        <span key={idx}>{idx + 1}</span>
-                      ))}
-                    </div>
                   </div>
                 </div>
-              ))}
-              {filteredApis.length === 0 && (
-                <div className="panel empty-state" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
-                  No matching Google Maps APIs found.
+
+                <div className="form-group">
+                  <label className="form-label">Open Time</label>
+                  <input
+                    type="time"
+                    className="form-control"
+                    value={clinicModal.data.openTime}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, openTime: e.target.value } }))}
+                  />
                 </div>
-              )}
-            </div>
-          </>
-        )}
 
-      </main>
+                <div className="form-group">
+                  <label className="form-label">Close Time</label>
+                  <input
+                    type="time"
+                    className="form-control"
+                    value={clinicModal.data.closeTime}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, closeTime: e.target.value } }))}
+                  />
+                </div>
 
-      {/* ── USER DETAILS MODAL (Flowchart: Display User Information & Reset Password & Suspend Account) ── */}
-      {selectedUser && (
-        <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedUser(null)}>
-              <Icons.Close />
-            </button>
-            <h3 className="modal-title">User Account Information</h3>
-            
-            <div className="detail-row">
-              <span className="detail-label">User ID:</span>
-              <span className="detail-value" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{selectedUser.id}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Name:</span>
-              <span className="detail-value">{selectedUser.name || 'Guest User'}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Email:</span>
-              <span className="detail-value">{selectedUser.email || 'guest@pawscura.com'}</span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">User Role:</span>
-              <span className="detail-value">
-                <span className={`badge ${selectedUser.role === 'admin' ? 'badge-urgent' : 'badge-safe'}`}>
-                  {selectedUser.role === 'admin' ? 'ADMINISTRATOR' : 'APP USER'}
-                </span>
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Billing Plan:</span>
-              <span className="detail-value">
-                <span className={`badge ${selectedUser.isPremium ? 'badge-safe' : 'badge-moderate'}`}>
-                  {selectedUser.isPremium ? 'Premium Plan' : 'Free Plan'}
-                </span>
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="detail-label">Account Status:</span>
-              <span className="detail-value">
-                <span className={`badge ${selectedUser.isSuspended ? 'badge-urgent' : 'badge-safe'}`}>
-                  {selectedUser.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
-                </span>
-              </span>
-            </div>
+                {/* ── Optional Secondary Schedule (e.g. Saturday / Weekend Hours) ── */}
+                <div className="form-group" style={{ gridColumn: '1 / -1', marginTop: '4px' }}>
+                  {!clinicModal.data.hasSecondarySchedule ? (
+                    <button
+                      type="button"
+                      onClick={() => setClinicModal(m => ({ ...m, data: { ...m.data, hasSecondarySchedule: true } }))}
+                      style={{
+                        background: 'none',
+                        border: '1px dashed var(--color-brand)',
+                        color: 'var(--color-brand)',
+                        padding: '8px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      + Add Weekend / Different Schedule (e.g., Sat 8am–12pm)
+                    </button>
+                  ) : (
+                    <div style={{ padding: '14px', backgroundColor: 'var(--color-canvas)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-brand)', textTransform: 'uppercase' }}>Secondary / Weekend Schedule</span>
+                        <button
+                          type="button"
+                          onClick={() => setClinicModal(m => ({ ...m, data: { ...m.data, hasSecondarySchedule: false } }))}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
 
-            <div className="detail-divider" />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Start Day</label>
+                          <select
+                            className="form-control"
+                            value={clinicModal.data.secondaryStartDay || 'Saturday'}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryStartDay: e.target.value } }))}
+                          >
+                            {WEEK_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>End Day</label>
+                          <select
+                            className="form-control"
+                            value={clinicModal.data.secondaryEndDay || 'Saturday'}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryEndDay: e.target.value } }))}
+                          >
+                            {WEEK_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                          </select>
+                        </div>
+                      </div>
 
-            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>Administrative Actions</h4>
-            
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              {/* Suspend / Reactivate action */}
-              <button 
-                onClick={() => handleToggleSuspension(selectedUser.id, !!selectedUser.isSuspended)}
-                style={{
-                  backgroundColor: selectedUser.isSuspended ? 'var(--color-success)' : 'var(--color-danger)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '13px'
-                }}
-              >
-                {selectedUser.isSuspended ? 'Reactivate Account' : 'Suspend Account'}
-              </button>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Open Time</label>
+                          <input
+                            type="time"
+                            className="form-control"
+                            value={clinicModal.data.secondaryOpenTime || '08:00'}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryOpenTime: e.target.value } }))}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Close Time</label>
+                          <input
+                            type="time"
+                            className="form-control"
+                            value={clinicModal.data.secondaryCloseTime || '12:00'}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryCloseTime: e.target.value } }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Reset Password Action */}
-              <button 
-                onClick={() => handleResetPassword(selectedUser.email)}
-                style={{
-                  backgroundColor: 'var(--color-overlay)',
-                  color: 'var(--color-text-primary)',
-                  border: '1px solid var(--color-border-strong)',
-                  padding: '10px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '13px'
-                }}
-              >
-                Reset Password
-              </button>
+                {/* Hours preview */}
+                {clinicModal.data.startDay && (
+                  <div style={{ gridColumn: '1 / -1', padding: '10px 14px', backgroundColor: 'var(--color-brand-transparent)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(14,165,233,0.2)', fontSize: '13px', color: 'var(--color-brand)', fontWeight: 600 }}>
+                    📅 {buildHoursString(clinicModal.data)}
+                  </div>
+                )}
 
-              {/* Premium Toggle Access */}
-              <button 
-                onClick={() => handleTogglePremium(selectedUser.id, !!selectedUser.isPremium)}
-                style={{
-                  backgroundColor: 'var(--color-overlay)',
-                  color: 'var(--color-brand)',
-                  border: '1px solid var(--color-brand)',
-                  padding: '10px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '13px'
-                }}
-              >
-                Toggle Premium Status
-              </button>
 
-              {/* Toggle User Role Access */}
-              <button 
-                onClick={() => handleToggleRole(selectedUser.id, selectedUser.role)}
-                style={{
-                  backgroundColor: 'var(--color-overlay)',
-                  color: 'var(--color-text-primary)',
-                  border: '1px solid var(--color-border-strong)',
-                  padding: '10px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '13px'
-                }}
-              >
-                Toggle Admin Role
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ── TRANSACTION DETAILS MODAL (Flowchart: Display Log Information) ── */}
-      {selectedTrans && (
-        <div className="modal-overlay" onClick={() => setSelectedTrans(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedTrans(null)}>
-              <Icons.Close />
-            </button>
-            <h3 className="modal-title">Payment Transaction Log</h3>
-            
-            <>
-              <div className="detail-row">
-                <span className="detail-label">Log ID:</span>
-                <span className="detail-value" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{selectedTrans.id}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Date/Time:</span>
-                <span className="detail-value">{selectedTrans.displayDate}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Subscriber Email:</span>
-                <span className="detail-value">{selectedTrans.userEmail}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Selected Plan:</span>
-                <span className="detail-value">
-                  <span className="badge badge-safe" style={{ backgroundColor: 'var(--color-brand-transparent)', color: 'var(--color-brand)' }}>
-                    {selectedTrans.planName}
-                  </span>
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Amount Paid:</span>
-                <span className="detail-value" style={{ fontWeight: 'bold' }}>${(selectedTrans.price !== undefined ? selectedTrans.price : (selectedTrans.amount || 0)).toFixed(2)}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Cardholder Name:</span>
-                <span className="detail-value">{selectedTrans.cardholderName || 'Admin Allocation'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Status:</span>
-                <span className="detail-value">
-                  <span className={`badge ${
-                    selectedTrans.status?.toLowerCase().includes('success') || selectedTrans.status?.toLowerCase().includes('granted')
-                      ? 'badge-safe' 
-                      : 'badge-urgent'
-                  }`}>
-                    {selectedTrans.status}
-                  </span>
-                </span>
+                <div className="form-group">
+                  <label className="form-label">Latitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="form-control"
+                    placeholder="e.g. 14.5995"
+                    value={clinicModal.data.latitude}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: e.target.value } }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Longitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="form-control"
+                    placeholder="e.g. 120.9842"
+                    value={clinicModal.data.longitude}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, longitude: e.target.value } }))}
+                  />
+                </div>
               </div>
 
-              <div className="detail-divider" />
-
-              <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>Administrative Actions</h4>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button className="btn-danger" onClick={() => handleDeleteTransaction(selectedTrans.id)}>
-                  Delete Log
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-secondary" onClick={closeClinicModal}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={saving} style={{ minWidth: '120px' }}>
+                  {saving ? 'Saving...' : clinicModal.mode === 'add' ? 'Add Clinic' : 'Save Changes'}
                 </button>
               </div>
-            </>
+            </form>
           </div>
         </div>
       )}
 
+      {/* ══════════════════════════════════════════════════════════
+          AD MODAL — Add / Edit
+      ══════════════════════════════════════════════════════════ */}
+      {adModal.open && (
+        <div className="modal-overlay" onClick={closeAdModal}>
+          <div className="modal-content" style={{ maxWidth: '580px' }} onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeAdModal}><Icons.Close /></button>
+            <h3 className="modal-title">
+              {adModal.mode === 'add' ? 'Create New Advertisement' : 'Edit Advertisement'}
+            </h3>
 
+            <form onSubmit={handleSaveAd}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Ad Title *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Summer Pet Health Promo"
+                    required
+                    value={adModal.data.title}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }))}
+                  />
+                </div>
 
-      {/* ── VIEW ASSESSMENT DETAILS MODAL ── */}
-      {selectedScan && (
-        <div className="modal-overlay" onClick={() => setSelectedScan(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedScan(null)}>
-              <Icons.Close />
-            </button>
-            
-            <h3 className="modal-title">Diagnostic Record Details</h3>
-            
-            <div className="detail-row">
-              <span className="detail-label">Date:</span>
-              <span className="detail-value">{selectedScan.displayDate || selectedScan.date}</span>
-            </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    placeholder="Describe what the ad is about..."
+                    style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
+                    value={adModal.data.description}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }))}
+                  />
+                </div>
 
-            <div className="detail-row">
-              <span className="detail-label">Pet Profile:</span>
-              <span className="detail-value">{selectedScan.petName} ({selectedScan.breed})</span>
-            </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Image URL</label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    placeholder="https://example.com/ad-banner.jpg"
+                    value={adModal.data.imageUrl}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }))}
+                  />
+                </div>
 
-            <div className="detail-row">
-              <span className="detail-label">Condition:</span>
-              <span className="detail-value" style={{ fontWeight: 'bold', color: 'var(--color-brand)' }}>
-                {selectedScan.issue}
-              </span>
-            </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Target URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    placeholder="https://example.com/promo"
+                    value={adModal.data.targetUrl}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }))}
+                  />
+                </div>
 
-            <div className="detail-row">
-              <span className="detail-label">Urgency:</span>
-              <span className="detail-value">
-                <span className={`badge ${
-                  selectedScan.status?.toLowerCase() === 'urgent' || selectedScan.status?.toLowerCase() === 'immediate care' ? 'badge-urgent' :
-                  selectedScan.status?.toLowerCase() === 'moderate' ? 'badge-moderate' : 'badge-safe'
-                }`}>
-                  {selectedScan.status}
-                </span>
-              </span>
-            </div>
+                <div className="form-group">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={adModal.data.startDate}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }))}
+                  />
+                </div>
 
+                <div className="form-group">
+                  <label className="form-label">End Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={adModal.data.endDate}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }))}
+                  />
+                </div>
 
-            <div className="detail-row">
-              <span className="detail-label">Owner User ID:</span>
-              <span className="detail-value" style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-                {selectedScan.userId}
-              </span>
-            </div>
-
-            <div className="detail-divider" />
-
-            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Observations & Advice</h4>
-            <p className="detail-description">{selectedScan.description}</p>
-
-            {(selectedScan.imageUrl || selectedScan.imageUri) && (
-              <div>
-                <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginTop: '16px', marginBottom: '8px' }}>Scanned Symptom Image</h4>
-                <img 
-                  src={selectedScan.imageUrl || selectedScan.imageUri} 
-                  alt="Symptom Diagnostic Scan" 
-                  className="scanned-image"
-                />
+                {/* Active toggle */}
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Active Status</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                    <label className="switch" style={{ flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={adModal.data.isActive}
+                        onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, isActive: e.target.checked } }))}
+                      />
+                      <span className="slider" />
+                    </label>
+                    <span style={{ fontSize: '13px', color: adModal.data.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 600 }}>
+                      {adModal.data.isActive ? 'Ad is Active (visible in app)' : 'Ad is Inactive (hidden from app)'}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-secondary" onClick={closeAdModal}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={saving} style={{ minWidth: '120px' }}>
+                  {saving ? 'Saving...' : adModal.mode === 'add' ? 'Create Ad' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          DELETE CONFIRMATION MODAL
+      ══════════════════════════════════════════════════════════ */}
+      {deleteModal.open && (
+        <div className="modal-overlay" onClick={closeDeleteModal}>
+          <div className="modal-content" style={{ maxWidth: '440px', textAlign: 'center', padding: '32px 28px' }} onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeDeleteModal} disabled={deleting}><Icons.Close /></button>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-danger-bg)',
+              color: 'var(--color-danger)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
+            }}>
+              <Icons.Trash />
+            </div>
+
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+              {deleteModal.type === 'clinic' ? 'Delete Veterinary Clinic?' : 'Delete Advertisement?'}
+            </h3>
+
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginBottom: '24px' }}>
+              Are you sure you want to delete <strong style={{ color: 'var(--color-text-primary)' }}>"{deleteModal.title}"</strong>? This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={closeDeleteModal}
+                disabled={deleting}
+                style={{ flex: 1, padding: '11px', fontWeight: '600' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={confirmDelete}
+                disabled={deleting}
+                style={{ flex: 1, padding: '11px', fontWeight: '700', backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
