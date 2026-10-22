@@ -340,7 +340,7 @@ export default function App() {
 
   const handleSaveAd = async (e) => {
     e.preventDefault();
-    if (!adModal.data.title.trim()) { alert('Ad title is required.'); return; }
+    if (!adModal.data.title.trim()) { alert('Advertisement title is required.'); return; }
     setSaving(true);
     try {
       const payload = {
@@ -362,7 +362,7 @@ export default function App() {
       closeAdModal();
     } catch (err) {
       console.error(err);
-      alert('Failed to save ad. Please try again.');
+      alert('Failed to save advertisement. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -399,7 +399,7 @@ export default function App() {
       await updateDoc(doc(db, 'ads', id), { isActive: !current, updatedAt: serverTimestamp() });
     } catch (err) {
       console.error(err);
-      alert('Failed to toggle ad status.');
+      alert('Failed to toggle advertisement status.');
     }
   };
 
@@ -521,7 +521,7 @@ export default function App() {
             </h2>
             <p className="header-subtitle">
               {activeTab === 'clinics' && `${filteredClinics.length} clinic${filteredClinics.length !== 1 ? 's' : ''} listed`}
-              {activeTab === 'ads' && `${filteredAds.length} ad${filteredAds.length !== 1 ? 's' : ''} · ${ads.filter(a => a.isActive).length} active`}
+              {activeTab === 'ads' && `${filteredAds.length} advertisement${filteredAds.length !== 1 ? 's' : ''} · ${ads.filter(a => a.isActive).length} active`}
             </p>
           </div>
 
@@ -532,7 +532,7 @@ export default function App() {
               <input
                 type="text"
                 className="search-input"
-                placeholder={activeTab === 'clinics' ? 'Search clinics...' : 'Search ads...'}
+                placeholder={activeTab === 'clinics' ? 'Search clinics...' : 'Search advertisements...'}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -554,7 +554,7 @@ export default function App() {
                 onClick={openAddAd}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
               >
-                <Icons.Plus /> Add Ad
+                <Icons.Plus /> Add Advertisement
               </button>
             )}
           </div>
@@ -652,10 +652,10 @@ export default function App() {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontWeight: '700', fontSize: '15px', color: 'var(--color-text-primary)', marginBottom: '6px' }}>
-                    {searchQuery ? 'No ads matched your search.' : 'No advertisements yet.'}
+                    {searchQuery ? 'No advertisements matched your search.' : 'No advertisements yet.'}
                   </p>
                   <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-                    {searchQuery ? 'Try a different keyword.' : 'Click "Add Ad" to create the first promotion.'}
+                    {searchQuery ? 'Try a different keyword.' : 'Click "Add Advertisement" to create the first promotion.'}
                   </p>
                 </div>
               </div>
@@ -664,7 +664,7 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Ad Details</th>
+                      <th>Advertisement Details</th>
                       <th>Image URL</th>
                       <th>Target URL</th>
                       <th>Duration</th>
@@ -1018,7 +1018,7 @@ export default function App() {
             <form onSubmit={handleSaveAd}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Ad Title *</label>
+                  <label className="form-label">Advertisement Title *</label>
                   <input
                     type="text"
                     className="form-control"
@@ -1034,7 +1034,7 @@ export default function App() {
                   <textarea
                     className="form-control"
                     rows={3}
-                    placeholder="Describe what the ad is about..."
+                    placeholder="Describe what the advertisement is about..."
                     style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
                     value={adModal.data.description}
                     onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }))}
@@ -1096,7 +1096,7 @@ export default function App() {
                       <span className="slider" />
                     </label>
                     <span style={{ fontSize: '13px', color: adModal.data.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 600 }}>
-                      {adModal.data.isActive ? 'Ad is Active (visible in app)' : 'Ad is Inactive (hidden from app)'}
+                      {adModal.data.isActive ? 'Advertisement is Active (visible in app)' : 'Advertisement is Inactive (hidden from app)'}
                     </span>
                   </div>
                 </div>
@@ -1105,7 +1105,7 @@ export default function App() {
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn-secondary" onClick={closeAdModal}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={saving} style={{ minWidth: '120px' }}>
-                  {saving ? 'Saving...' : adModal.mode === 'add' ? 'Create Ad' : 'Save Changes'}
+                  {saving ? 'Saving...' : adModal.mode === 'add' ? 'Create Advertisement' : 'Save Changes'}
                 </button>
               </div>
             </form>
