@@ -9,7 +9,16 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  updateEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
+} from 'firebase/auth';
 
 // ── SVG Icon set ──────────────────────────────────────────────────────────────
 const Icons = {
@@ -24,6 +33,17 @@ const Icons = {
   Ads: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+    </svg>
+  ),
+  User: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+  Check: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
     </svg>
   ),
   Edit: () => (
@@ -157,13 +177,6 @@ const BLANK_AD = {
 };
 
 // ── Utility ───────────────────────────────────────────────────────────────────
-function formatDate(ts) {
-  if (!ts) return '—';
-  if (ts.toDate) return ts.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  if (typeof ts === 'string') return ts;
-  return '—';
-}
-
 function fmt12(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -226,10 +239,32 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Admin Profile state
+  const [profileForm, setProfileForm] = useState({
+    displayName: '',
+    photoURL: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+
   // ── Auth listener ──
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
+      if (u) {
+        setProfileForm({
+          displayName: u.displayName || '',
+          photoURL: u.photoURL || '',
+          email: u.email || '',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      }
       setAuthLoading(false);
     });
     return unsub;
@@ -274,6 +309,134 @@ export default function App() {
       setLoginError(msg);
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  // ── Admin Profile Update ──
+  const openProfileTab = () => {
+    if (auth.currentUser) {
+      setProfileForm({
+        displayName: auth.currentUser.displayName || '',
+        photoURL: auth.currentUser.photoURL || '',
+        email: auth.currentUser.email || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    }
+    setProfileMessage({ type: '', text: '' });
+    setActiveTab('profile');
+    setSearchQuery('');
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileMessage({ type: '', text: '' });
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const trimmedName = profileForm.displayName.trim();
+    const trimmedPhoto = profileForm.photoURL.trim();
+    const trimmedEmail = profileForm.email.trim();
+    const emailChanged = trimmedEmail && trimmedEmail !== (currentUser.email || '');
+    const passwordChanged = Boolean(profileForm.newPassword);
+    const profileInfoChanged =
+      trimmedName !== (currentUser.displayName || '') ||
+      trimmedPhoto !== (currentUser.photoURL || '');
+
+    if (!emailChanged && !passwordChanged && !profileInfoChanged) {
+      setProfileMessage({ type: 'error', text: 'No changes detected to update.' });
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setProfileMessage({ type: 'error', text: 'Email address cannot be empty.' });
+      return;
+    }
+
+    if (passwordChanged) {
+      if (profileForm.newPassword.length < 6) {
+        setProfileMessage({ type: 'error', text: 'New passcode must be at least 6 characters.' });
+        return;
+      }
+      if (profileForm.newPassword !== profileForm.confirmPassword) {
+        setProfileMessage({ type: 'error', text: 'New passcode and confirmation do not match.' });
+        return;
+      }
+    }
+
+    if ((emailChanged || passwordChanged) && !profileForm.currentPassword) {
+      setProfileMessage({
+        type: 'error',
+        text: 'Please enter your current passcode to update your email or passcode.'
+      });
+      return;
+    }
+
+    setProfileSaving(true);
+    try {
+      // Re-authenticate if sensitive fields (email or password) are being updated
+      if (emailChanged || passwordChanged) {
+        const credential = EmailAuthProvider.credential(currentUser.email, profileForm.currentPassword);
+        await reauthenticateWithCredential(currentUser, credential);
+      }
+
+      if (profileInfoChanged) {
+        await updateProfile(currentUser, {
+          displayName: trimmedName,
+          photoURL: trimmedPhoto,
+        });
+      }
+
+      if (emailChanged) {
+        await updateEmail(currentUser, trimmedEmail);
+      }
+
+      if (passwordChanged) {
+        await updatePassword(currentUser, profileForm.newPassword);
+      }
+
+      // Sync React user state with updated Firebase Auth user properties
+      setUser({
+        ...currentUser,
+        uid: currentUser.uid,
+        displayName: currentUser.displayName,
+        email: currentUser.email,
+        photoURL: currentUser.photoURL,
+      });
+
+      setProfileForm(prev => ({
+        ...prev,
+        displayName: currentUser.displayName || '',
+        photoURL: currentUser.photoURL || '',
+        email: currentUser.email || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }));
+
+      setProfileMessage({
+        type: 'success',
+        text: 'Admin profile updated successfully!'
+      });
+    } catch (err) {
+      console.error(err);
+      let msg = 'Failed to update profile. Please try again.';
+      if (['auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
+        msg = 'Current passcode is incorrect.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        msg = 'That email address is already in use by another account.';
+      } else if (err.code === 'auth/invalid-email') {
+        msg = 'Please enter a valid email address.';
+      } else if (err.code === 'auth/weak-password') {
+        msg = 'New passcode is too weak. Please use at least 6 characters.';
+      } else if (err.code === 'auth/requires-recent-login') {
+        msg = 'Please enter your current passcode to verify your identity.';
+      }
+      setProfileMessage({ type: 'error', text: msg });
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -455,7 +618,7 @@ export default function App() {
               <input type="password" className="form-control" placeholder="••••••••" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
             </div>
             <button type="submit" className="btn-primary" disabled={loginLoading}
-              style={{ width: '100%', padding: '13px', fontSize: '14px', fontWeight: '700', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, hsl(200,95%,30%) 0%, hsl(200,95%,44%) 100%)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)' }}>
+              style={{ width: '100%', padding: '13px', fontSize: '14px', fontWeight: '700', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #794B35 0%, #D88D59 100%)', color: '#FFF8F1', border: 'none', borderRadius: 'var(--radius-md)' }}>
               {loginLoading ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
@@ -463,6 +626,9 @@ export default function App() {
       </div>
     );
   }
+
+  const adminDisplayName = user.displayName || 'Admin';
+  const adminInitial = (user.displayName || user.email || 'A').charAt(0).toUpperCase();
 
   // ── Admin layout ──
   return (
@@ -494,9 +660,36 @@ export default function App() {
               <span>Advertisements</span>
             </div>
           </li>
+          <li>
+            <div
+              className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={openProfileTab}
+            >
+              <span className="nav-icon"><Icons.User /></span>
+              <span>Admin Profile</span>
+            </div>
+          </li>
         </ul>
 
         <div className="sidebar-footer">
+          <div
+            className="admin-profile-card"
+            onClick={openProfileTab}
+            title="Click to update admin profile"
+          >
+            <div className="admin-avatar">
+              {user.photoURL ? (
+                <img src={user.photoURL} alt={adminDisplayName} />
+              ) : (
+                adminInitial
+              )}
+            </div>
+            <div className="admin-profile-info">
+              <span className="admin-profile-name">{adminDisplayName}</span>
+              <span className="admin-profile-email">{user.email}</span>
+            </div>
+          </div>
+
           <div
             className="nav-item nav-item-logout"
             onClick={() => {
@@ -518,46 +711,50 @@ export default function App() {
             <h2 className="header-title">
               {activeTab === 'clinics' && 'Veterinary Clinic Directory'}
               {activeTab === 'ads' && 'Advertisements Manager'}
+              {activeTab === 'profile' && 'Admin Profile Settings'}
             </h2>
             <p className="header-subtitle">
               {activeTab === 'clinics' && `${filteredClinics.length} clinic${filteredClinics.length !== 1 ? 's' : ''} listed`}
               {activeTab === 'ads' && `${filteredAds.length} advertisement${filteredAds.length !== 1 ? 's' : ''} · ${ads.filter(a => a.isActive).length} active`}
+              {activeTab === 'profile' && 'Update your admin display name, email address, and security passcode'}
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {/* Search */}
-            <div className="search-input-wrap">
-              <span className="search-icon"><Icons.Search /></span>
-              <input
-                type="text"
-                className="search-input"
-                placeholder={activeTab === 'clinics' ? 'Search clinics...' : 'Search advertisements...'}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-            </div>
+          {activeTab !== 'profile' && (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {/* Search */}
+              <div className="search-input-wrap">
+                <span className="search-icon"><Icons.Search /></span>
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder={activeTab === 'clinics' ? 'Search clinics...' : 'Search advertisements...'}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-            {/* Add button */}
-            {activeTab === 'clinics' && (
-              <button
-                className="btn-primary"
-                onClick={openAddClinic}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
-              >
-                <Icons.Plus /> Add Clinic
-              </button>
-            )}
-            {activeTab === 'ads' && (
-              <button
-                className="btn-primary"
-                onClick={openAddAd}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
-              >
-                <Icons.Plus /> Add Advertisement
-              </button>
-            )}
-          </div>
+              {/* Add button */}
+              {activeTab === 'clinics' && (
+                <button
+                  className="btn-primary"
+                  onClick={openAddClinic}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
+                >
+                  <Icons.Plus /> Add Clinic
+                </button>
+              )}
+              {activeTab === 'ads' && (
+                <button
+                  className="btn-primary"
+                  onClick={openAddAd}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '10px 18px' }}
+                >
+                  <Icons.Plus /> Add Advertisement
+                </button>
+              )}
+            </div>
+          )}
         </header>
 
         {/* ── VET CLINICS TAB ── */}
@@ -733,6 +930,189 @@ export default function App() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── ADMIN PROFILE TAB ── */}
+        {activeTab === 'profile' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 340px) 1fr', gap: '24px', alignItems: 'start' }}>
+            {/* Current Profile Overview Card */}
+            <div className="panel" style={{ alignItems: 'center', textAlign: 'center', padding: '32px 24px' }}>
+              <div style={{
+                width: '88px',
+                height: '88px',
+                borderRadius: 'var(--radius-full)',
+                background: 'linear-gradient(135deg, #794B35 0%, #D88D59 100%)',
+                color: '#FFF8F1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '32px',
+                fontWeight: '800',
+                marginBottom: '16px',
+                boxShadow: 'var(--shadow-md)',
+                overflow: 'hidden',
+                border: '3px solid var(--color-border)'
+              }}>
+                {profileForm.photoURL || user.photoURL ? (
+                  <img
+                    src={profileForm.photoURL || user.photoURL}
+                    alt={adminDisplayName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  adminInitial
+                )}
+              </div>
+
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+                {adminDisplayName}
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: '500', marginBottom: '16px' }}>
+                {user.email}
+              </p>
+
+              <span className="badge badge-moderate" style={{ padding: '6px 14px', fontSize: '11px' }}>
+                Admin
+              </span>
+
+              <div className="detail-divider" style={{ width: '100%', margin: '24px 0 16px 0' }} />
+
+              <div style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Account UID</div>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-primary)', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '2px' }}>
+                    {user.uid}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Portal Access</div>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: '600', marginTop: '2px' }}>
+                    Full Read & Write (Clinics, Ads)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Update Profile Form Panel */}
+            <div className="panel" style={{ padding: '32px' }}>
+              <h3 className="panel-title" style={{ marginBottom: '6px', fontSize: '18px' }}>Update Profile Information</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
+                Modify your admin profile details or change your login credentials below.
+              </p>
+
+              {profileMessage.text && (
+                <div style={{
+                  backgroundColor: profileMessage.type === 'success' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                  border: `1px solid ${profileMessage.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)'}`,
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '12px 16px',
+                  marginBottom: '20px',
+                  color: profileMessage.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontWeight: '600'
+                }}>
+                  {profileMessage.type === 'success' ? <Icons.Check /> : <Icons.Alert />}
+                  <span>{profileMessage.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateProfile}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Display Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. PawsCura Admin"
+                      value={profileForm.displayName}
+                      onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="admin@pawscura.com"
+                      required
+                      value={profileForm.email}
+                      onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">
+                      Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span>
+                    </label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      placeholder="https://example.com/avatar.png"
+                      value={profileForm.photoURL}
+                      onChange={e => setProfileForm(f => ({ ...f, photoURL: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="detail-divider" style={{ margin: '24px 0' }} />
+
+                <h4 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+                  Security & Passcode
+                </h4>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+                  Leave the new passcode fields blank if you do not wish to change your passcode. Your current passcode is required when changing your email or passcode.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">New Passcode</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="New passcode (min. 6 chars)"
+                      value={profileForm.newPassword}
+                      onChange={e => setProfileForm(f => ({ ...f, newPassword: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Confirm New Passcode</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="Re-enter new passcode"
+                      value={profileForm.confirmPassword}
+                      onChange={e => setProfileForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">
+                      Current Passcode <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(required to change email or passcode)</span>
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="Enter your current passcode to verify changes"
+                      value={profileForm.currentPassword}
+                      onChange={e => setProfileForm(f => ({ ...f, currentPassword: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                  <button type="submit" className="btn-primary" disabled={profileSaving} style={{ minWidth: '150px' }}>
+                    {profileSaving ? 'Updating...' : 'Save Profile Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </main>
@@ -961,12 +1341,10 @@ export default function App() {
 
                 {/* Hours preview */}
                 {clinicModal.data.startDay && (
-                  <div style={{ gridColumn: '1 / -1', padding: '10px 14px', backgroundColor: 'var(--color-brand-transparent)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(14,165,233,0.2)', fontSize: '13px', color: 'var(--color-brand)', fontWeight: 600 }}>
+                  <div style={{ gridColumn: '1 / -1', padding: '10px 14px', backgroundColor: 'var(--color-brand-transparent)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border-strong)', fontSize: '13px', color: 'var(--color-brand)', fontWeight: 600 }}>
                     📅 {buildHoursString(clinicModal.data)}
                   </div>
                 )}
-
-
 
                 <div className="form-group">
                   <label className="form-label">Latitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
