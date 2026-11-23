@@ -314,6 +314,7 @@ export default function App() {
         hours: buildHoursString(clinicModal.data),
         latitude: clinicModal.data.latitude ? parseFloat(clinicModal.data.latitude) : null,
         longitude: clinicModal.data.longitude ? parseFloat(clinicModal.data.longitude) : null,
+        userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
       if (clinicModal.mode === 'add') {
@@ -351,6 +352,7 @@ export default function App() {
         isActive: Boolean(adModal.data.isActive),
         startDate: adModal.data.startDate || null,
         endDate: adModal.data.endDate || null,
+        userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
       if (adModal.mode === 'add') {
