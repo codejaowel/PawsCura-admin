@@ -9,6 +9,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import MapPicker from './MapPicker';
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -1345,6 +1346,15 @@ export default function App() {
                     📅 {buildHoursString(clinicModal.data)}
                   </div>
                 )}
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Pin Location on Map</label>
+                  <MapPicker
+                    latitude={clinicModal.data.latitude}
+                    longitude={clinicModal.data.longitude}
+                    onChange={(lat, lng) => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: lat, longitude: lng } }))}
+                  />
+                </div>
 
                 <div className="form-group">
                   <label className="form-label">Latitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>

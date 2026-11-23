@@ -912,6 +912,27 @@ input:checked + .slider:before {
   color: var(--color-danger) !important;
 }
 
+/* Map pin picker */
+.map-picker {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-canvas);
+}
+
+.map-picker .leaflet-container {
+  cursor: crosshair;
+  font-family: var(--font-sans);
+}
+
+.map-picker-hint {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  padding: 8px 12px;
+  font-weight: 600;
+  border-top: 1px solid var(--color-border);
+}
+
 /* Spinner for loading splash screen */
 @keyframes spin {
   0% { transform: rotate(0deg); }
