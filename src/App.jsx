@@ -3,6 +3,7 @@ import {
   collection,
   onSnapshot,
   doc,
+  getDoc,
   updateDoc,
   addDoc,
   deleteDoc,
@@ -252,11 +253,27 @@ export default function App() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
 
-  // ── Auth listener ──
+  // ── Auth listener (Strict Admin Role Enforced) ──
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+    const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', u.uid));
+          if (userDocSnap.exists()) {
+            const role = userDocSnap.data()?.role;
+            if (role !== 'admin') {
+              await signOut(auth);
+              setUser(null);
+              setLoginError('Access restricted. This portal is exclusively for administrator accounts.');
+              setAuthLoading(false);
+              return;
+            }
+          }
+        } catch (roleErr) {
+          console.warn('Admin role verification check warning:', roleErr);
+        }
+
+        setUser(u);
         setProfileForm({
           displayName: u.displayName || '',
           photoURL: u.photoURL || '',
@@ -265,6 +282,8 @@ export default function App() {
           newPassword: '',
           confirmPassword: '',
         });
+      } else {
+        setUser(null);
       }
       setAuthLoading(false);
     });
@@ -289,7 +308,7 @@ export default function App() {
     };
   }, [user]);
 
-  // ── Login ──
+  // ── Login (Strict Admin Role Enforced) ──
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -299,7 +318,18 @@ export default function App() {
     }
     setLoginLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword.trim());
+      const cred = await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword.trim());
+      
+      // Strict allowlist: Only 'admin' accounts can log into the web admin portal
+      const userDocSnap = await getDoc(doc(db, 'users', cred.user.uid));
+      if (userDocSnap.exists()) {
+        const role = userDocSnap.data()?.role;
+        if (role !== 'admin') {
+          await signOut(auth);
+          setLoginError('Access restricted. This portal is exclusively for administrator accounts.');
+          return;
+        }
+      }
     } catch (err) {
       let msg = 'Authentication failed. Please check your credentials.';
       if (['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
