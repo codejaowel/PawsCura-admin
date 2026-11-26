@@ -147,6 +147,9 @@ const Icons = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlg5lkxmu';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'PawsCura_ScanImg';
+const CLOUDINARY_API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || '996478613985411';
 
 function getItemsPerPage() {
   return Math.max(6, Math.floor((window.innerHeight - 240) / 54) - 1);
@@ -313,6 +316,7 @@ export default function App() {
   const [clinicErrors, setClinicErrors] = useState({});
   const [adModal, setAdModal] = useState({ open: false, mode: 'add', data: BLANK_AD, id: null });
   const [adErrors, setAdErrors] = useState({});
+  const [adImageUploading, setAdImageUploading] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null, title: '' });
   const [deleteError, setDeleteError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -742,7 +746,50 @@ export default function App() {
   };
   const closeAdModal = () => {
     setAdErrors({});
+    setAdImageUploading(false);
     setAdModal(m => ({ ...m, open: false }));
+  };
+
+  const handleAdImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAdErrors(prev => ({ ...prev, imageUrl: 'Please select a valid image file (PNG, JPG, WEBP).' }));
+      return;
+    }
+
+    setAdErrors(prev => ({ ...prev, imageUrl: '' }));
+    setAdImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
+      formData.append('api_key', CLOUDINARY_API_KEY);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData,
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!res.ok) {
+        throw new Error('Cloudinary upload failed');
+      }
+
+      const json = await res.json();
+      if (json.secure_url) {
+        setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: json.secure_url } }));
+      } else {
+        setAdErrors(prev => ({ ...prev, imageUrl: 'Image upload failed. Please try again.' }));
+      }
+    } catch (err) {
+      console.error(err);
+      setAdErrors(prev => ({ ...prev, imageUrl: 'Failed to upload image to Cloudinary. Please try again.' }));
+    } finally {
+      setAdImageUploading(false);
+    }
   };
 
   const handleSaveAd = async (e) => {
@@ -760,10 +807,10 @@ export default function App() {
     if (!trimmedDescription) {
       errs.description = 'Description is required.';
     }
-    if (!trimmedImage) {
-      errs.imageUrl = 'Image URL is required.';
-    } else if (!isValidHttpUrl(trimmedImage)) {
-      errs.imageUrl = 'Enter a valid URL starting with http:// or https://.';
+    if (adImageUploading) {
+      errs.imageUrl = 'Please wait for the image upload to finish.';
+    } else if (!trimmedImage) {
+      errs.imageUrl = 'Please upload an advertisement image.';
     }
     if (!trimmedTarget) {
       errs.targetUrl = 'Target URL is required.';
@@ -1816,7 +1863,7 @@ export default function App() {
                     className={`form-control ${adErrors.description ? 'input-error' : ''}`}
                     rows={3}
                     placeholder="Describe what the advertisement is about..."
-                    style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
+                    style={{ resize: 'none', fontFamily: 'var(--font-sans)' }}
                     value={adModal.data.description}
                     onChange={e => {
                       setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }));
@@ -1827,18 +1874,32 @@ export default function App() {
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Image URL *</label>
+                  <label className="form-label">Advertisement Image *</label>
                   <input
-                    type="url"
+                    type="file"
+                    accept="image/*"
+                    disabled={adImageUploading}
                     className={`form-control ${adErrors.imageUrl ? 'input-error' : ''}`}
-                    placeholder="https://example.com/ad-banner.jpg"
-                    value={adModal.data.imageUrl}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }));
-                      if (adErrors.imageUrl) setAdErrors(prev => ({ ...prev, imageUrl: '' }));
-                    }}
+                    onChange={handleAdImageUpload}
                   />
+                  {adImageUploading && (
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-brand)', marginTop: '2px' }}>
+                      Uploading image to Cloudinary...
+                    </span>
+                  )}
                   {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
+                  {adModal.data.imageUrl && !adImageUploading && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px', padding: '8px 10px', backgroundColor: 'var(--color-canvas)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+                      <img
+                        src={adModal.data.imageUrl}
+                        alt="Ad preview"
+                        style={{ width: '56px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-xs)', border: '1px solid var(--color-border-strong)' }}
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        Image uploaded and ready
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
