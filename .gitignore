@@ -24,3 +24,14 @@ dist-ssr
 *.sw?
 
 .vercel
+*.txt
+*.docx
+testing_suite/
+qa_tests/
+App Logo.png
+Logo with name under.png
+public/Landing.png
+public/favicon.svg
+public/icons.svg
+src/assets/
+src/App.css
