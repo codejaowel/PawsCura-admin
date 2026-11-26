@@ -766,6 +766,55 @@ input:checked + .slider:before {
   margin-top: 2px;
 }
 
+/* Custom File Upload Control */
+.file-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: var(--color-canvas);
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.file-upload-box:hover {
+  background-color: rgba(243, 217, 191, 0.45);
+  border-color: var(--color-brand);
+}
+
+.file-upload-box.input-error {
+  border-color: var(--color-danger);
+  border-style: solid;
+  background-color: var(--color-danger-bg);
+}
+
+.file-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #794B35 0%, #D88D59 100%);
+  color: #FFF8F1;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+}
+
+.file-upload-thumb {
+  width: 56px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border-strong);
+  flex-shrink: 0;
+}
+
 .btn-primary {
   background-color: var(--color-brand);
   color: #FFF8F1;

@@ -149,7 +149,6 @@ const Icons = {
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlg5lkxmu';
 const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'PawsCura_ScanImg';
-const CLOUDINARY_API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || '996478613985411';
 
 function getItemsPerPage() {
   return Math.max(6, Math.floor((window.innerHeight - 240) / 54) - 1);
@@ -766,7 +765,6 @@ export default function App() {
       formData.append('file', file);
       formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
       formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
-      formData.append('api_key', CLOUDINARY_API_KEY);
 
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
         method: 'POST',
@@ -1875,31 +1873,52 @@ export default function App() {
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Advertisement Image *</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={adImageUploading}
-                    className={`form-control ${adErrors.imageUrl ? 'input-error' : ''}`}
-                    onChange={handleAdImageUpload}
-                  />
-                  {adImageUploading && (
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-brand)', marginTop: '2px' }}>
-                      Uploading image to Cloudinary...
-                    </span>
-                  )}
-                  {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
-                  {adModal.data.imageUrl && !adImageUploading && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px', padding: '8px 10px', backgroundColor: 'var(--color-canvas)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-                      <img
-                        src={adModal.data.imageUrl}
-                        alt="Ad preview"
-                        style={{ width: '56px', height: '40px', objectFit: 'cover', borderRadius: 'var(--radius-xs)', border: '1px solid var(--color-border-strong)' }}
-                      />
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        Image uploaded and ready
-                      </span>
+                  <label
+                    className={`file-upload-box ${adErrors.imageUrl ? 'input-error' : ''}`}
+                    tabIndex={0}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={adImageUploading}
+                      onChange={handleAdImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                      {adModal.data.imageUrl && !adImageUploading ? (
+                        <img
+                          src={adModal.data.imageUrl}
+                          alt="Ad preview"
+                          className="file-upload-thumb"
+                        />
+                      ) : (
+                        <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Icons.Image />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {adImageUploading
+                            ? 'Uploading image to Cloudinary...'
+                            : adModal.data.imageUrl
+                            ? 'Image uploaded and ready'
+                            : 'Select an image file to upload'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                          {adImageUploading
+                            ? 'Please wait a moment'
+                            : adModal.data.imageUrl
+                            ? 'Click to replace with a different image'
+                            : 'Supports PNG, JPG, WEBP'}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                    <span className="file-upload-btn">
+                      <Icons.Image />
+                      {adImageUploading ? 'Uploading...' : adModal.data.imageUrl ? 'Change Image' : 'Choose Image'}
+                    </span>
+                  </label>
+                  {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
