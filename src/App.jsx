@@ -26,127 +26,170 @@ import {
 const Icons = {
   Clinic: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-      <polyline points="9 22 9 12 15 12 15 22"/>
-      <line x1="12" y1="5" x2="12" y2="9"/>
-      <line x1="10" y1="7" x2="14" y2="7"/>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+      <line x1="12" y1="5" x2="12" y2="9" />
+      <line x1="10" y1="7" x2="14" y2="7" />
     </svg>
   ),
   Ads: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+      <path d="M3 11l19-9-9 19-2-8-8-2z" />
     </svg>
   ),
   User: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   ),
   Check: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   Edit: () => (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   ),
   Trash: () => (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6"/>
-      <path d="M14 11v6"/>
-      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
     </svg>
   ),
   Plus: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"/>
-      <line x1="5" y1="12" x2="19" y2="12"/>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
   Close: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"/>
-      <line x1="6" y1="6" x2="18" y2="18"/>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Alert: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
   Logout: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   Search: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   ),
   MapPin: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-      <circle cx="12" cy="10" r="3"/>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
     </svg>
   ),
   Phone: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   ),
   Clock: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <polyline points="12 6 12 12 16 14"/>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
   Tag: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-      <line x1="7" y1="7" x2="7.01" y2="7"/>
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <line x1="7" y1="7" x2="7.01" y2="7" />
     </svg>
   ),
   ToggleOn: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
-      <circle cx="16" cy="12" r="3" fill="currentColor"/>
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7" />
+      <circle cx="16" cy="12" r="3" fill="currentColor" />
     </svg>
   ),
   ToggleOff: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="5" width="22" height="14" rx="7" ry="7"/>
-      <circle cx="8" cy="12" r="3" fill="currentColor"/>
+      <rect x="1" y="5" width="22" height="14" rx="7" ry="7" />
+      <circle cx="8" cy="12" r="3" fill="currentColor" />
     </svg>
   ),
   Image: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <polyline points="21 15 16 10 5 21"/>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
     </svg>
   ),
   Link: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   ),
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function getItemsPerPage() {
+  return Math.max(6, Math.floor((window.innerHeight - 240) / 54) - 1);
+}
+
+function Pagination({ currentPage, totalItems, pageSize, onPageChange }) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  if (totalItems === 0) return null;
+
+  const start = (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <div className="pagination-bar">
+      <span className="pagination-info">
+        Showing {start}–{end} of {totalItems}
+      </span>
+      {totalPages > 1 && (
+        <div className="pagination-controls">
+          <button
+            type="button"
+            className="pagination-btn"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+          >
+            Previous
+          </button>
+          <span className="pagination-page-indicator">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="pagination-btn"
+            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Blank forms ───────────────────────────────────────────────────────────────
 const BLANK_CLINIC = {
@@ -179,6 +222,28 @@ const BLANK_AD = {
 };
 
 // ── Utility ───────────────────────────────────────────────────────────────────
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[\d+\-()\s/]{7,}$/;
+
+function isValidHttpUrl(val) {
+  try {
+    const u = new URL(val);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function scrollToFirstError(formEl) {
+  requestAnimationFrame(() => {
+    const firstInvalid = formEl?.querySelector('.input-error');
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstInvalid.focus({ preventScroll: true });
+    }
+  });
+}
+
 function fmt12(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -224,11 +289,20 @@ export default function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [loginFieldErrors, setLoginFieldErrors] = useState({});
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Navigation
   const [activeTab, setActiveTab] = useState('clinics');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(getItemsPerPage);
+
+  useEffect(() => {
+    const onResize = () => setItemsPerPage(getItemsPerPage());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Firestore data
   const [clinics, setClinics] = useState([]);
@@ -236,20 +310,23 @@ export default function App() {
 
   // Modal state
   const [clinicModal, setClinicModal] = useState({ open: false, mode: 'add', data: BLANK_CLINIC, id: null });
+  const [clinicErrors, setClinicErrors] = useState({});
   const [adModal, setAdModal] = useState({ open: false, mode: 'add', data: BLANK_AD, id: null });
+  const [adErrors, setAdErrors] = useState({});
   const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null, title: '' });
+  const [deleteError, setDeleteError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   // Admin Profile state
   const [profileForm, setProfileForm] = useState({
     displayName: '',
-    photoURL: '',
     email: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+  const [profileErrors, setProfileErrors] = useState({});
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
 
@@ -276,7 +353,6 @@ export default function App() {
         setUser(u);
         setProfileForm({
           displayName: u.displayName || '',
-          photoURL: u.photoURL || '',
           email: u.email || '',
           currentPassword: '',
           newPassword: '',
@@ -311,15 +387,27 @@ export default function App() {
   // ── Login (Strict Admin Role Enforced) ──
   const handleLogin = async (e) => {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setLoginError('');
-    if (!loginEmail.trim() || !loginPassword.trim()) {
-      setLoginError('Please enter both email and password.');
+    const errs = {};
+    if (!loginEmail.trim()) {
+      errs.email = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(loginEmail.trim())) {
+      errs.email = 'Enter a valid email address.';
+    }
+    if (!loginPassword.trim()) {
+      errs.password = 'Passcode is required.';
+    }
+    if (Object.keys(errs).length > 0) {
+      setLoginFieldErrors(errs);
+      scrollToFirstError(formEl);
       return;
     }
+    setLoginFieldErrors({});
     setLoginLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword.trim());
-      
+
       // Strict allowlist: Only 'admin' accounts can log into the web admin portal
       const userDocSnap = await getDoc(doc(db, 'users', cred.user.uid));
       if (userDocSnap.exists()) {
@@ -331,13 +419,15 @@ export default function App() {
         }
       }
     } catch (err) {
-      let msg = 'Authentication failed. Please check your credentials.';
       if (['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
-        msg = 'Invalid email address or passcode.';
+        setLoginFieldErrors({ email: 'Check your email address.', password: 'Invalid email or passcode.' });
+        scrollToFirstError(formEl);
       } else if (err.code === 'auth/invalid-email') {
-        msg = 'Invalid email format.';
+        setLoginFieldErrors({ email: 'Invalid email format.' });
+        scrollToFirstError(formEl);
+      } else {
+        setLoginError('Authentication failed. Please check your credentials.');
       }
-      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -348,13 +438,13 @@ export default function App() {
     if (auth.currentUser) {
       setProfileForm({
         displayName: auth.currentUser.displayName || '',
-        photoURL: auth.currentUser.photoURL || '',
         email: auth.currentUser.email || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
     }
+    setProfileErrors({});
     setProfileMessage({ type: '', text: '' });
     setActiveTab('profile');
     setSearchQuery('');
@@ -362,49 +452,54 @@ export default function App() {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setProfileMessage({ type: '', text: '' });
 
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
     const trimmedName = profileForm.displayName.trim();
-    const trimmedPhoto = profileForm.photoURL.trim();
     const trimmedEmail = profileForm.email.trim();
     const emailChanged = trimmedEmail && trimmedEmail !== (currentUser.email || '');
-    const passwordChanged = Boolean(profileForm.newPassword);
-    const profileInfoChanged =
-      trimmedName !== (currentUser.displayName || '') ||
-      trimmedPhoto !== (currentUser.photoURL || '');
+    const passwordChanged = Boolean(profileForm.newPassword || profileForm.confirmPassword);
+    const profileInfoChanged = trimmedName !== (currentUser.displayName || '');
 
-    if (!emailChanged && !passwordChanged && !profileInfoChanged) {
-      setProfileMessage({ type: 'error', text: 'No changes detected to update.' });
-      return;
+    const errs = {};
+    if (!trimmedName) {
+      errs.displayName = 'Display name is required.';
     }
-
     if (!trimmedEmail) {
-      setProfileMessage({ type: 'error', text: 'Email address cannot be empty.' });
-      return;
+      errs.email = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      errs.email = 'Enter a valid email address.';
     }
 
     if (passwordChanged) {
-      if (profileForm.newPassword.length < 6) {
-        setProfileMessage({ type: 'error', text: 'New passcode must be at least 6 characters.' });
-        return;
+      if (!profileForm.newPassword || profileForm.newPassword.length < 6) {
+        errs.newPassword = 'New passcode must be at least 6 characters.';
       }
       if (profileForm.newPassword !== profileForm.confirmPassword) {
-        setProfileMessage({ type: 'error', text: 'New passcode and confirmation do not match.' });
-        return;
+        errs.confirmPassword = 'Passcodes do not match.';
       }
     }
 
     if ((emailChanged || passwordChanged) && !profileForm.currentPassword) {
-      setProfileMessage({
-        type: 'error',
-        text: 'Please enter your current passcode to update your email or passcode.'
-      });
+      errs.currentPassword = 'Enter your current passcode to verify this change.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setProfileErrors(errs);
+      scrollToFirstError(formEl);
       return;
     }
 
+    if (!emailChanged && !passwordChanged && !profileInfoChanged) {
+      setProfileErrors({ displayName: 'Modify at least one field before saving.' });
+      scrollToFirstError(formEl);
+      return;
+    }
+
+    setProfileErrors({});
     setProfileSaving(true);
     try {
       // Re-authenticate if sensitive fields (email or password) are being updated
@@ -416,7 +511,6 @@ export default function App() {
       if (profileInfoChanged) {
         await updateProfile(currentUser, {
           displayName: trimmedName,
-          photoURL: trimmedPhoto,
         });
       }
 
@@ -440,7 +534,6 @@ export default function App() {
       setProfileForm(prev => ({
         ...prev,
         displayName: currentUser.displayName || '',
-        photoURL: currentUser.photoURL || '',
         email: currentUser.email || '',
         currentPassword: '',
         newPassword: '',
@@ -453,48 +546,140 @@ export default function App() {
       });
     } catch (err) {
       console.error(err);
-      let msg = 'Failed to update profile. Please try again.';
       if (['auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
-        msg = 'Current passcode is incorrect.';
+        setProfileErrors({ currentPassword: 'Current passcode is incorrect.' });
+        scrollToFirstError(formEl);
       } else if (err.code === 'auth/email-already-in-use') {
-        msg = 'That email address is already in use by another account.';
+        setProfileErrors({ email: 'That email address is already in use.' });
+        scrollToFirstError(formEl);
       } else if (err.code === 'auth/invalid-email') {
-        msg = 'Please enter a valid email address.';
+        setProfileErrors({ email: 'Enter a valid email address.' });
+        scrollToFirstError(formEl);
       } else if (err.code === 'auth/weak-password') {
-        msg = 'New passcode is too weak. Please use at least 6 characters.';
+        setProfileErrors({ newPassword: 'Passcode must be at least 6 characters.' });
+        scrollToFirstError(formEl);
       } else if (err.code === 'auth/requires-recent-login') {
-        msg = 'Please enter your current passcode to verify your identity.';
+        setProfileErrors({ currentPassword: 'Enter your current passcode to verify your identity.' });
+        scrollToFirstError(formEl);
+      } else {
+        setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
       }
-      setProfileMessage({ type: 'error', text: msg });
     } finally {
       setProfileSaving(false);
     }
   };
 
   // ── Clinic CRUD ──
-  const openAddClinic = () => setClinicModal({ open: true, mode: 'add', data: { ...BLANK_CLINIC }, id: null });
+  const openAddClinic = () => {
+    setClinicErrors({});
+    setClinicModal({ open: true, mode: 'add', data: { ...BLANK_CLINIC }, id: null });
+  };
   const openEditClinic = (clinic) => {
+    setClinicErrors({});
     const closedDaysList = Array.isArray(clinic.closedDaysList) ? clinic.closedDaysList : [];
     const startDay = clinic.startDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[0] : 'Monday');
     const endDay = clinic.endDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[clinic.operatingDays.length - 1] : 'Friday');
     setClinicModal({
       open: true, mode: 'edit',
-      data: { ...BLANK_CLINIC, ...clinic, closedDaysList, startDay, endDay },
+      data: {
+        ...BLANK_CLINIC,
+        ...clinic,
+        name: clinic.name || '',
+        address: clinic.address || '',
+        phone: clinic.phone || '',
+        email: clinic.email || '',
+        latitude: clinic.latitude ?? '',
+        longitude: clinic.longitude ?? '',
+        closedDaysList,
+        startDay,
+        endDay,
+      },
       id: clinic.id
     });
   };
-  const closeClinicModal = () => setClinicModal(m => ({ ...m, open: false }));
+  const closeClinicModal = () => {
+    setClinicErrors({});
+    setClinicModal(m => ({ ...m, open: false }));
+  };
 
   const handleSaveClinic = async (e) => {
     e.preventDefault();
-    if (!clinicModal.data.name.trim()) { alert('Clinic name is required.'); return; }
+    const formEl = e.currentTarget;
+    const errs = {};
+    const trimmedName = (clinicModal.data.name || '').trim();
+    const trimmedAddress = (clinicModal.data.address || '').trim();
+    const trimmedPhone = (clinicModal.data.phone || '').trim();
+    const trimmedEmail = (clinicModal.data.email || '').trim();
+
+    if (!trimmedName) {
+      errs.name = 'Clinic name is required.';
+    }
+    if (!trimmedAddress) {
+      errs.address = 'Address is required.';
+    }
+    if (!trimmedPhone) {
+      errs.phone = 'Phone number is required.';
+    } else if (!PHONE_REGEX.test(trimmedPhone)) {
+      errs.phone = 'Enter a valid phone number.';
+    }
+    if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
+      errs.email = 'Enter a valid email address.';
+    }
+
+    if (!clinicModal.data.openTime) {
+      errs.openTime = 'Open time is required.';
+    }
+    if (!clinicModal.data.closeTime) {
+      errs.closeTime = 'Close time is required.';
+    } else if (clinicModal.data.openTime && clinicModal.data.closeTime <= clinicModal.data.openTime) {
+      errs.closeTime = 'Close time must be after open time.';
+    }
+
+    if (clinicModal.data.hasSecondarySchedule) {
+      if (!clinicModal.data.secondaryOpenTime) {
+        errs.secondaryOpenTime = 'Open time is required.';
+      }
+      if (!clinicModal.data.secondaryCloseTime) {
+        errs.secondaryCloseTime = 'Close time is required.';
+      } else if (
+        clinicModal.data.secondaryOpenTime &&
+        clinicModal.data.secondaryCloseTime <= clinicModal.data.secondaryOpenTime
+      ) {
+        errs.secondaryCloseTime = 'Close time must be after open time.';
+      }
+    }
+
+    const rawLat = String(clinicModal.data.latitude ?? '').trim();
+    const rawLng = String(clinicModal.data.longitude ?? '').trim();
+    const parsedLat = rawLat !== '' ? Number(rawLat) : null;
+    const parsedLng = rawLng !== '' ? Number(rawLng) : null;
+
+    if (rawLat === '') {
+      errs.latitude = 'Latitude is required (click the map or enter a value).';
+    } else if (!Number.isFinite(parsedLat) || parsedLat < -90 || parsedLat > 90) {
+      errs.latitude = 'Must be between -90 and 90.';
+    }
+
+    if (rawLng === '') {
+      errs.longitude = 'Longitude is required (click the map or enter a value).';
+    } else if (!Number.isFinite(parsedLng) || parsedLng < -180 || parsedLng > 180) {
+      errs.longitude = 'Must be between -180 and 180.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setClinicErrors(errs);
+      scrollToFirstError(formEl);
+      return;
+    }
+
+    setClinicErrors({});
     setSaving(true);
     try {
       const payload = {
-        name: clinicModal.data.name.trim(),
-        address: clinicModal.data.address.trim(),
-        phone: clinicModal.data.phone.trim(),
-        email: clinicModal.data.email.trim(),
+        name: trimmedName,
+        address: trimmedAddress,
+        phone: trimmedPhone,
+        email: trimmedEmail,
         startDay: clinicModal.data.startDay || 'Monday',
         endDay: clinicModal.data.endDay || 'Friday',
         openTime: clinicModal.data.openTime || '',
@@ -506,8 +691,8 @@ export default function App() {
         secondaryOpenTime: clinicModal.data.secondaryOpenTime || '',
         secondaryCloseTime: clinicModal.data.secondaryCloseTime || '',
         hours: buildHoursString(clinicModal.data),
-        latitude: clinicModal.data.latitude ? parseFloat(clinicModal.data.latitude) : null,
-        longitude: clinicModal.data.longitude ? parseFloat(clinicModal.data.longitude) : null,
+        latitude: parsedLat,
+        longitude: parsedLng,
         userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
@@ -520,32 +705,97 @@ export default function App() {
       closeClinicModal();
     } catch (err) {
       console.error(err);
-      alert('Failed to save clinic. Please try again.');
+      setClinicErrors({ form: 'Failed to save clinic. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const triggerDeleteClinic = (id, name) => setDeleteModal({ open: true, type: 'clinic', id, title: name });
+  const triggerDeleteClinic = (id, name) => {
+    setDeleteError('');
+    setDeleteModal({ open: true, type: 'clinic', id, title: name });
+  };
 
   // ── Ads CRUD ──
-  const openAddAd = () => setAdModal({ open: true, mode: 'add', data: { ...BLANK_AD }, id: null });
-  const openEditAd = (ad) => setAdModal({ open: true, mode: 'edit', data: { ...ad }, id: ad.id });
-  const closeAdModal = () => setAdModal(m => ({ ...m, open: false }));
+  const openAddAd = () => {
+    setAdErrors({});
+    setAdModal({ open: true, mode: 'add', data: { ...BLANK_AD }, id: null });
+  };
+  const openEditAd = (ad) => {
+    setAdErrors({});
+    setAdModal({
+      open: true,
+      mode: 'edit',
+      data: {
+        ...BLANK_AD,
+        ...ad,
+        title: ad.title || '',
+        description: ad.description || '',
+        imageUrl: ad.imageUrl || '',
+        targetUrl: ad.targetUrl || '',
+        startDate: ad.startDate || '',
+        endDate: ad.endDate || '',
+        isActive: ad.isActive ?? true,
+      },
+      id: ad.id,
+    });
+  };
+  const closeAdModal = () => {
+    setAdErrors({});
+    setAdModal(m => ({ ...m, open: false }));
+  };
 
   const handleSaveAd = async (e) => {
     e.preventDefault();
-    if (!adModal.data.title.trim()) { alert('Advertisement title is required.'); return; }
+    const formEl = e.currentTarget;
+    const errs = {};
+    const trimmedTitle = (adModal.data.title || '').trim();
+    const trimmedDescription = (adModal.data.description || '').trim();
+    const trimmedImage = (adModal.data.imageUrl || '').trim();
+    const trimmedTarget = (adModal.data.targetUrl || '').trim();
+
+    if (!trimmedTitle) {
+      errs.title = 'Advertisement title is required.';
+    }
+    if (!trimmedDescription) {
+      errs.description = 'Description is required.';
+    }
+    if (!trimmedImage) {
+      errs.imageUrl = 'Image URL is required.';
+    } else if (!isValidHttpUrl(trimmedImage)) {
+      errs.imageUrl = 'Enter a valid URL starting with http:// or https://.';
+    }
+    if (!trimmedTarget) {
+      errs.targetUrl = 'Target URL is required.';
+    } else if (!isValidHttpUrl(trimmedTarget)) {
+      errs.targetUrl = 'Enter a valid URL starting with http:// or https://.';
+    }
+    if (!adModal.data.startDate) {
+      errs.startDate = 'Start date is required.';
+    }
+    if (!adModal.data.endDate) {
+      errs.endDate = 'End date is required.';
+    } else if (adModal.data.startDate && adModal.data.endDate < adModal.data.startDate) {
+      errs.endDate = 'End date cannot be earlier than start date.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setAdErrors(errs);
+      scrollToFirstError(formEl);
+      return;
+    }
+
+    setAdErrors({});
     setSaving(true);
     try {
       const payload = {
-        title: adModal.data.title.trim(),
-        description: adModal.data.description.trim(),
-        imageUrl: adModal.data.imageUrl.trim(),
-        targetUrl: adModal.data.targetUrl.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
+        imageUrl: trimmedImage,
+        targetUrl: trimmedTarget,
         isActive: Boolean(adModal.data.isActive),
-        startDate: adModal.data.startDate || null,
-        endDate: adModal.data.endDate || null,
+        startDate: adModal.data.startDate,
+        endDate: adModal.data.endDate,
         userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
@@ -558,23 +808,28 @@ export default function App() {
       closeAdModal();
     } catch (err) {
       console.error(err);
-      alert('Failed to save advertisement. Please try again.');
+      setAdErrors({ form: 'Failed to save advertisement. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const triggerDeleteAd = (id, title) => setDeleteModal({ open: true, type: 'ad', id, title });
+  const triggerDeleteAd = (id, title) => {
+    setDeleteError('');
+    setDeleteModal({ open: true, type: 'ad', id, title });
+  };
 
   // ── Delete Confirmation Handlers ──
   const closeDeleteModal = () => {
     if (deleting) return;
+    setDeleteError('');
     setDeleteModal({ open: false, type: '', id: null, title: '' });
   };
 
   const confirmDelete = async () => {
     if (!deleteModal.id) return;
     setDeleting(true);
+    setDeleteError('');
     try {
       if (deleteModal.type === 'clinic') {
         await deleteDoc(doc(db, 'vetClinics', deleteModal.id));
@@ -584,7 +839,7 @@ export default function App() {
       closeDeleteModal();
     } catch (err) {
       console.error(err);
-      alert(`Failed to delete ${deleteModal.type === 'clinic' ? 'clinic' : 'advertisement'}. Please try again.`);
+      setDeleteError(`Failed to delete ${deleteModal.type === 'clinic' ? 'clinic' : 'advertisement'}. Please try again.`);
     } finally {
       setDeleting(false);
     }
@@ -595,7 +850,6 @@ export default function App() {
       await updateDoc(doc(db, 'ads', id), { isActive: !current, updatedAt: serverTimestamp() });
     } catch (err) {
       console.error(err);
-      alert('Failed to toggle advertisement status.');
     }
   };
 
@@ -609,6 +863,16 @@ export default function App() {
     a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
+
+  const activeListLength = activeTab === 'clinics' ? filteredClinics.length : filteredAds.length;
+  const maxPage = Math.max(1, Math.ceil(activeListLength / itemsPerPage));
+  const safePage = Math.min(currentPage, maxPage);
+  const paginatedClinics = filteredClinics.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
+  const paginatedAds = filteredAds.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
   // ── Loading screen ──
   if (authLoading) {
@@ -641,14 +905,34 @@ export default function App() {
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} noValidate>
             <div className="form-group">
               <label className="form-label">Email Address</label>
-              <input type="email" className="form-control" placeholder="admin@pawscura.com" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+              <input
+                type="email"
+                className={`form-control ${loginFieldErrors.email ? 'input-error' : ''}`}
+                placeholder="admin@pawscura.com"
+                value={loginEmail}
+                onChange={e => {
+                  setLoginEmail(e.target.value);
+                  if (loginFieldErrors.email) setLoginFieldErrors(prev => ({ ...prev, email: '' }));
+                }}
+              />
+              {loginFieldErrors.email && <span className="field-error">{loginFieldErrors.email}</span>}
             </div>
             <div className="form-group" style={{ marginBottom: '28px' }}>
               <label className="form-label">Passcode</label>
-              <input type="password" className="form-control" placeholder="••••••••" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+              <input
+                type="password"
+                className={`form-control ${loginFieldErrors.password ? 'input-error' : ''}`}
+                placeholder="••••••••"
+                value={loginPassword}
+                onChange={e => {
+                  setLoginPassword(e.target.value);
+                  if (loginFieldErrors.password) setLoginFieldErrors(prev => ({ ...prev, password: '' }));
+                }}
+              />
+              {loginFieldErrors.password && <span className="field-error">{loginFieldErrors.password}</span>}
             </div>
             <button type="submit" className="btn-primary" disabled={loginLoading}
               style={{ width: '100%', padding: '13px', fontSize: '14px', fontWeight: '700', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #794B35 0%, #D88D59 100%)', color: '#FFF8F1', border: 'none', borderRadius: 'var(--radius-md)' }}>
@@ -797,8 +1081,8 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '80px 0', gap: '16px' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--color-brand-transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-brand)' }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                 </div>
                 <div style={{ textAlign: 'center' }}>
@@ -811,63 +1095,71 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div className="table-container">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Clinic Name</th>
-                      <th>Address</th>
-                      <th>Phone</th>
-                      <th>Hours</th>
-                      <th style={{ textAlign: 'center' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredClinics.map(clinic => (
-                      <tr key={clinic.id}>
-                        <td>
-                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '3px' }}>{clinic.name}</div>
-                          {clinic.email && <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{clinic.email}</div>}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
-                            <span style={{ marginTop: '2px', color: 'var(--color-text-muted)', flexShrink: 0 }}><Icons.MapPin /></span>
-                            <span style={{ fontSize: '13px' }}>{clinic.address || '—'}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Phone /></span>
-                            <span>{clinic.phone || '—'}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Clock /></span>
-                            <span>{clinic.hours || '—'}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button
-                              onClick={() => openEditClinic(clinic)}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                            >
-                              <Icons.Edit /> Edit
-                            </button>
-                            <button
-                              onClick={() => triggerDeleteClinic(clinic.id, clinic.name)}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                            >
-                              <Icons.Trash /> Delete
-                            </button>
-                          </div>
-                        </td>
+              <>
+                <div className="table-container">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '22%' }}>Clinic Name</th>
+                        <th style={{ width: '28%' }}>Address</th>
+                        <th style={{ width: '15%' }}>Phone</th>
+                        <th style={{ width: '21%' }}>Hours</th>
+                        <th style={{ width: '170px', textAlign: 'center' }}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {paginatedClinics.map(clinic => (
+                        <tr key={clinic.id}>
+                          <td>
+                            <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '3px' }}>{clinic.name}</div>
+                            {clinic.email && <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{clinic.email}</div>}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                              <span style={{ marginTop: '2px', color: 'var(--color-text-muted)', flexShrink: 0 }}><Icons.MapPin /></span>
+                              <span style={{ fontSize: '13px' }}>{clinic.address || '—'}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ color: 'var(--color-text-muted)' }}><Icons.Phone /></span>
+                              <span>{clinic.phone || '—'}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ color: 'var(--color-text-muted)' }}><Icons.Clock /></span>
+                              <span>{clinic.hours || '—'}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button
+                                onClick={() => openEditClinic(clinic)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                              >
+                                <Icons.Edit /> Edit
+                              </button>
+                              <button
+                                onClick={() => triggerDeleteClinic(clinic.id, clinic.name)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                              >
+                                <Icons.Trash /> Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  currentPage={safePage}
+                  totalItems={filteredClinics.length}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </div>
         )}
@@ -890,78 +1182,86 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div className="table-container">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Advertisement Details</th>
-                      <th>Image URL</th>
-                      <th>Target URL</th>
-                      <th>Duration</th>
-                      <th style={{ textAlign: 'center' }}>Status</th>
-                      <th style={{ textAlign: 'center' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAds.map(ad => (
-                      <tr key={ad.id}>
-                        <td>
-                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '4px' }}>{ad.title}</div>
-                          {ad.description && (
-                            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {ad.description}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          {ad.imageUrl ? (
-                            <a href={ad.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
-                              <Icons.Image /> Preview
-                            </a>
-                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
-                        </td>
-                        <td>
-                          {ad.targetUrl ? (
-                            <a href={ad.targetUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              <Icons.Link /> {ad.targetUrl.replace(/^https?:\/\//, '')}
-                            </a>
-                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
-                        </td>
-                        <td>
-                          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                            {ad.startDate || '—'} → {ad.endDate || '—'}
-                          </div>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            onClick={() => handleToggleAdActive(ad.id, ad.isActive)}
-                            title={ad.isActive ? 'Click to deactivate' : 'Click to activate'}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 auto', padding: '6px 10px', borderRadius: 'var(--radius-sm)', color: ad.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 700, fontSize: '12px', backgroundColor: ad.isActive ? 'var(--color-success-bg)' : 'var(--color-overlay)' }}
-                          >
-                            {ad.isActive ? <><Icons.ToggleOn /> Active</> : <><Icons.ToggleOff /> Inactive</>}
-                          </button>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button
-                              onClick={() => openEditAd(ad)}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                            >
-                              <Icons.Edit /> Edit
-                            </button>
-                            <button
-                              onClick={() => triggerDeleteAd(ad.id, ad.title)}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                            >
-                              <Icons.Trash /> Delete
-                            </button>
-                          </div>
-                        </td>
+              <>
+                <div className="table-container">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '28%' }}>Advertisement Details</th>
+                        <th style={{ width: '11%' }}>Image URL</th>
+                        <th style={{ width: '17%' }}>Target URL</th>
+                        <th style={{ width: '17%' }}>Duration</th>
+                        <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+                        <th style={{ width: '170px', textAlign: 'center' }}>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {paginatedAds.map(ad => (
+                        <tr key={ad.id}>
+                          <td>
+                            <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '4px' }}>{ad.title}</div>
+                            {ad.description && (
+                              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {ad.description}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {ad.imageUrl ? (
+                              <a href={ad.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
+                                <Icons.Image /> Preview
+                              </a>
+                            ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                          </td>
+                          <td>
+                            {ad.targetUrl ? (
+                              <a href={ad.targetUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <Icons.Link /> {ad.targetUrl.replace(/^https?:\/\//, '')}
+                              </a>
+                            ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                              {ad.startDate || '—'} → {ad.endDate || '—'}
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'center', width: '120px' }}>
+                            <button
+                              onClick={() => handleToggleAdActive(ad.id, ad.isActive)}
+                              title={ad.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              style={{ border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '104px', padding: '6px 10px', borderRadius: 'var(--radius-sm)', color: ad.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 700, fontSize: '12px', backgroundColor: ad.isActive ? 'var(--color-success-bg)' : 'var(--color-overlay)' }}
+                            >
+                              {ad.isActive ? <><Icons.ToggleOn /> Active</> : <><Icons.ToggleOff /> Inactive</>}
+                            </button>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button
+                                onClick={() => openEditAd(ad)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                              >
+                                <Icons.Edit /> Edit
+                              </button>
+                              <button
+                                onClick={() => triggerDeleteAd(ad.id, ad.title)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                              >
+                                <Icons.Trash /> Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  currentPage={safePage}
+                  totalItems={filteredAds.length}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </div>
         )}
@@ -987,9 +1287,9 @@ export default function App() {
                 overflow: 'hidden',
                 border: '3px solid var(--color-border)'
               }}>
-                {profileForm.photoURL || user.photoURL ? (
+                {user.photoURL ? (
                   <img
-                    src={profileForm.photoURL || user.photoURL}
+                    src={user.photoURL}
                     alt={adminDisplayName}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={e => { e.currentTarget.style.display = 'none'; }}
@@ -1054,42 +1354,36 @@ export default function App() {
                 </div>
               )}
 
-              <form onSubmit={handleUpdateProfile}>
+              <form onSubmit={handleUpdateProfile} noValidate>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="form-group">
                     <label className="form-label">Display Name</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${profileErrors.displayName ? 'input-error' : ''}`}
                       placeholder="e.g. PawsCura Admin"
                       value={profileForm.displayName}
-                      onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(f => ({ ...f, displayName: e.target.value }));
+                        if (profileErrors.displayName) setProfileErrors(prev => ({ ...prev, displayName: '' }));
+                      }}
                     />
+                    {profileErrors.displayName && <span className="field-error">{profileErrors.displayName}</span>}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Email Address</label>
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${profileErrors.email ? 'input-error' : ''}`}
                       placeholder="admin@pawscura.com"
-                      required
                       value={profileForm.email}
-                      onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(f => ({ ...f, email: e.target.value }));
+                        if (profileErrors.email) setProfileErrors(prev => ({ ...prev, email: '' }));
+                      }}
                     />
-                  </div>
-
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                    <label className="form-label">
-                      Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span>
-                    </label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      placeholder="https://example.com/avatar.png"
-                      value={profileForm.photoURL}
-                      onChange={e => setProfileForm(f => ({ ...f, photoURL: e.target.value }))}
-                    />
+                    {profileErrors.email && <span className="field-error">{profileErrors.email}</span>}
                   </div>
                 </div>
 
@@ -1107,22 +1401,30 @@ export default function App() {
                     <label className="form-label">New Passcode</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${profileErrors.newPassword ? 'input-error' : ''}`}
                       placeholder="New passcode (min. 6 chars)"
                       value={profileForm.newPassword}
-                      onChange={e => setProfileForm(f => ({ ...f, newPassword: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(f => ({ ...f, newPassword: e.target.value }));
+                        if (profileErrors.newPassword) setProfileErrors(prev => ({ ...prev, newPassword: '' }));
+                      }}
                     />
+                    {profileErrors.newPassword && <span className="field-error">{profileErrors.newPassword}</span>}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Confirm New Passcode</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${profileErrors.confirmPassword ? 'input-error' : ''}`}
                       placeholder="Re-enter new passcode"
                       value={profileForm.confirmPassword}
-                      onChange={e => setProfileForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(f => ({ ...f, confirmPassword: e.target.value }));
+                        if (profileErrors.confirmPassword) setProfileErrors(prev => ({ ...prev, confirmPassword: '' }));
+                      }}
                     />
+                    {profileErrors.confirmPassword && <span className="field-error">{profileErrors.confirmPassword}</span>}
                   </div>
 
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -1131,11 +1433,15 @@ export default function App() {
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${profileErrors.currentPassword ? 'input-error' : ''}`}
                       placeholder="Enter your current passcode to verify changes"
                       value={profileForm.currentPassword}
-                      onChange={e => setProfileForm(f => ({ ...f, currentPassword: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(f => ({ ...f, currentPassword: e.target.value }));
+                        if (profileErrors.currentPassword) setProfileErrors(prev => ({ ...prev, currentPassword: '' }));
+                      }}
                     />
+                    {profileErrors.currentPassword && <span className="field-error">{profileErrors.currentPassword}</span>}
                   </div>
                 </div>
 
@@ -1154,58 +1460,74 @@ export default function App() {
           CLINIC MODAL — Add / Edit
       ══════════════════════════════════════════════════════════ */}
       {clinicModal.open && (
-        <div className="modal-overlay" onClick={closeClinicModal}>
-          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '600px' }}>
             <button className="modal-close" onClick={closeClinicModal}><Icons.Close /></button>
             <h3 className="modal-title">
               {clinicModal.mode === 'add' ? 'Add New Veterinary Clinic' : 'Edit Clinic Information'}
             </h3>
 
-            <form onSubmit={handleSaveClinic}>
+            <form onSubmit={handleSaveClinic} noValidate>
+              {clinicErrors.form && <div className="field-error" style={{ marginBottom: '12px' }}>{clinicErrors.form}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Clinic Name</label>
+                  <label className="form-label">Clinic Name *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.name ? 'input-error' : ''}`}
                     placeholder="e.g. PetCare Animal Hospital"
-                    required
                     value={clinicModal.data.name}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, name: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, name: e.target.value } }));
+                      if (clinicErrors.name) setClinicErrors(prev => ({ ...prev, name: '' }));
+                    }}
                   />
+                  {clinicErrors.name && <span className="field-error">{clinicErrors.name}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Address</label>
+                  <label className="form-label">Address *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.address ? 'input-error' : ''}`}
                     placeholder="e.g. 123 Veterinary Lane, Manila"
                     value={clinicModal.data.address}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, address: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, address: e.target.value } }));
+                      if (clinicErrors.address) setClinicErrors(prev => ({ ...prev, address: '' }));
+                    }}
                   />
+                  {clinicErrors.address && <span className="field-error">{clinicErrors.address}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Phone Number</label>
+                  <label className="form-label">Phone Number *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.phone ? 'input-error' : ''}`}
                     placeholder="+63 123 123 1234"
                     value={clinicModal.data.phone}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, phone: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, phone: e.target.value } }));
+                      if (clinicErrors.phone) setClinicErrors(prev => ({ ...prev, phone: '' }));
+                    }}
                   />
+                  {clinicErrors.phone && <span className="field-error">{clinicErrors.phone}</span>}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Email Address</label>
                   <input
                     type="email"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.email ? 'input-error' : ''}`}
                     placeholder="clinic@example.com"
                     value={clinicModal.data.email}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, email: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, email: e.target.value } }));
+                      if (clinicErrors.email) setClinicErrors(prev => ({ ...prev, email: '' }));
+                    }}
                   />
+                  {clinicErrors.email && <span className="field-error">{clinicErrors.email}</span>}
                 </div>
 
                 {/* ── Primary Operating Schedule ── */}
@@ -1271,23 +1593,33 @@ export default function App() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Open Time</label>
+                  <label className="form-label">Open Time *</label>
                   <input
                     type="time"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.openTime ? 'input-error' : ''}`}
                     value={clinicModal.data.openTime}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, openTime: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, openTime: e.target.value } }));
+                      if (clinicErrors.openTime || clinicErrors.closeTime) {
+                        setClinicErrors(prev => ({ ...prev, openTime: '', closeTime: '' }));
+                      }
+                    }}
                   />
+                  {clinicErrors.openTime && <span className="field-error">{clinicErrors.openTime}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Close Time</label>
+                  <label className="form-label">Close Time *</label>
                   <input
                     type="time"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.closeTime ? 'input-error' : ''}`}
                     value={clinicModal.data.closeTime}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, closeTime: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, closeTime: e.target.value } }));
+                      if (clinicErrors.closeTime) setClinicErrors(prev => ({ ...prev, closeTime: '' }));
+                    }}
                   />
+                  {clinicErrors.closeTime && <span className="field-error">{clinicErrors.closeTime}</span>}
                 </div>
 
                 {/* ── Optional Secondary Schedule (e.g. Saturday / Weekend Hours) ── */}
@@ -1350,22 +1682,34 @@ export default function App() {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <div>
-                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Open Time</label>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Open Time *</label>
                           <input
                             type="time"
-                            className="form-control"
+                            className={`form-control ${clinicErrors.secondaryOpenTime ? 'input-error' : ''}`}
                             value={clinicModal.data.secondaryOpenTime || '08:00'}
-                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryOpenTime: e.target.value } }))}
+                            onChange={e => {
+                              setClinicModal(m => ({ ...m, data: { ...m.data, secondaryOpenTime: e.target.value } }));
+                              if (clinicErrors.secondaryOpenTime || clinicErrors.secondaryCloseTime) {
+                                setClinicErrors(prev => ({ ...prev, secondaryOpenTime: '', secondaryCloseTime: '' }));
+                              }
+                            }}
                           />
+                          {clinicErrors.secondaryOpenTime && <span className="field-error">{clinicErrors.secondaryOpenTime}</span>}
                         </div>
                         <div>
-                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Close Time</label>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Close Time *</label>
                           <input
                             type="time"
-                            className="form-control"
+                            className={`form-control ${clinicErrors.secondaryCloseTime ? 'input-error' : ''}`}
                             value={clinicModal.data.secondaryCloseTime || '12:00'}
-                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryCloseTime: e.target.value } }))}
+                            onChange={e => {
+                              setClinicModal(m => ({ ...m, data: { ...m.data, secondaryCloseTime: e.target.value } }));
+                              if (clinicErrors.secondaryCloseTime) {
+                                setClinicErrors(prev => ({ ...prev, secondaryCloseTime: '' }));
+                              }
+                            }}
                           />
+                          {clinicErrors.secondaryCloseTime && <span className="field-error">{clinicErrors.secondaryCloseTime}</span>}
                         </div>
                       </div>
                     </div>
@@ -1380,36 +1724,49 @@ export default function App() {
                 )}
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Pin Location on Map</label>
+                  <label className="form-label">Pin Location on Map *</label>
                   <MapPicker
                     latitude={clinicModal.data.latitude}
                     longitude={clinicModal.data.longitude}
-                    onChange={(lat, lng) => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: lat, longitude: lng } }))}
+                    onChange={(lat, lng) => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, latitude: lat, longitude: lng } }));
+                      if (clinicErrors.latitude || clinicErrors.longitude) {
+                        setClinicErrors(prev => ({ ...prev, latitude: '', longitude: '' }));
+                      }
+                    }}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Latitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
+                  <label className="form-label">Latitude *</label>
                   <input
                     type="number"
                     step="any"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.latitude ? 'input-error' : ''}`}
                     placeholder="e.g. 14.5995"
                     value={clinicModal.data.latitude}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, latitude: e.target.value } }));
+                      if (clinicErrors.latitude) setClinicErrors(prev => ({ ...prev, latitude: '' }));
+                    }}
                   />
+                  {clinicErrors.latitude && <span className="field-error">{clinicErrors.latitude}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Longitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
+                  <label className="form-label">Longitude *</label>
                   <input
                     type="number"
                     step="any"
-                    className="form-control"
+                    className={`form-control ${clinicErrors.longitude ? 'input-error' : ''}`}
                     placeholder="e.g. 120.9842"
                     value={clinicModal.data.longitude}
-                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, longitude: e.target.value } }))}
+                    onChange={e => {
+                      setClinicModal(m => ({ ...m, data: { ...m.data, longitude: e.target.value } }));
+                      if (clinicErrors.longitude) setClinicErrors(prev => ({ ...prev, longitude: '' }));
+                    }}
                   />
+                  {clinicErrors.longitude && <span className="field-error">{clinicErrors.longitude}</span>}
                 </div>
               </div>
 
@@ -1428,79 +1785,105 @@ export default function App() {
           AD MODAL — Add / Edit
       ══════════════════════════════════════════════════════════ */}
       {adModal.open && (
-        <div className="modal-overlay" onClick={closeAdModal}>
-          <div className="modal-content" style={{ maxWidth: '580px' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '580px' }}>
             <button className="modal-close" onClick={closeAdModal}><Icons.Close /></button>
             <h3 className="modal-title">
               {adModal.mode === 'add' ? 'Create New Advertisement' : 'Edit Advertisement'}
             </h3>
 
-            <form onSubmit={handleSaveAd}>
+            <form onSubmit={handleSaveAd} noValidate>
+              {adErrors.form && <div className="field-error" style={{ marginBottom: '12px' }}>{adErrors.form}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Advertisement Title *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${adErrors.title ? 'input-error' : ''}`}
                     placeholder="e.g. Summer Pet Health Promo"
-                    required
                     value={adModal.data.title}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }));
+                      if (adErrors.title) setAdErrors(prev => ({ ...prev, title: '' }));
+                    }}
                   />
+                  {adErrors.title && <span className="field-error">{adErrors.title}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Description</label>
+                  <label className="form-label">Description *</label>
                   <textarea
-                    className="form-control"
+                    className={`form-control ${adErrors.description ? 'input-error' : ''}`}
                     rows={3}
                     placeholder="Describe what the advertisement is about..."
                     style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
                     value={adModal.data.description}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }));
+                      if (adErrors.description) setAdErrors(prev => ({ ...prev, description: '' }));
+                    }}
                   />
+                  {adErrors.description && <span className="field-error">{adErrors.description}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Image URL</label>
+                  <label className="form-label">Image URL *</label>
                   <input
                     type="url"
-                    className="form-control"
+                    className={`form-control ${adErrors.imageUrl ? 'input-error' : ''}`}
                     placeholder="https://example.com/ad-banner.jpg"
                     value={adModal.data.imageUrl}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }));
+                      if (adErrors.imageUrl) setAdErrors(prev => ({ ...prev, imageUrl: '' }));
+                    }}
                   />
+                  {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Target URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
+                  <label className="form-label">Target URL * <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
                   <input
                     type="url"
-                    className="form-control"
+                    className={`form-control ${adErrors.targetUrl ? 'input-error' : ''}`}
                     placeholder="https://example.com/promo"
                     value={adModal.data.targetUrl}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }));
+                      if (adErrors.targetUrl) setAdErrors(prev => ({ ...prev, targetUrl: '' }));
+                    }}
                   />
+                  {adErrors.targetUrl && <span className="field-error">{adErrors.targetUrl}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Start Date</label>
+                  <label className="form-label">Start Date *</label>
                   <input
                     type="date"
-                    className="form-control"
+                    className={`form-control ${adErrors.startDate ? 'input-error' : ''}`}
                     value={adModal.data.startDate}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }));
+                      if (adErrors.startDate || adErrors.endDate) {
+                        setAdErrors(prev => ({ ...prev, startDate: '', endDate: '' }));
+                      }
+                    }}
                   />
+                  {adErrors.startDate && <span className="field-error">{adErrors.startDate}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">End Date</label>
+                  <label className="form-label">End Date *</label>
                   <input
                     type="date"
-                    className="form-control"
+                    className={`form-control ${adErrors.endDate ? 'input-error' : ''}`}
                     value={adModal.data.endDate}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }));
+                      if (adErrors.endDate) setAdErrors(prev => ({ ...prev, endDate: '' }));
+                    }}
                   />
+                  {adErrors.endDate && <span className="field-error">{adErrors.endDate}</span>}
                 </div>
 
                 {/* Active toggle */}
@@ -1562,6 +1945,7 @@ export default function App() {
             <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginBottom: '24px' }}>
               Are you sure you want to delete <strong style={{ color: 'var(--color-text-primary)' }}>"{deleteModal.title}"</strong>? This action cannot be undone.
             </p>
+            {deleteError && <div className="field-error" style={{ marginBottom: '16px' }}>{deleteError}</div>}
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button

@@ -39,7 +39,13 @@ function Recenter({ position }) {
 export default function MapPicker({ latitude, longitude, onChange }) {
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);
-  const hasPin = Number.isFinite(lat) && Number.isFinite(lng);
+  const hasPin =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180;
   const position = hasPin ? [lat, lng] : null;
 
   const handlePick = (newLat, newLng) => {
