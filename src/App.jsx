@@ -4,6 +4,9 @@ import {
   onSnapshot,
   doc,
   getDoc,
+  getDocs,
+  query,
+  where,
   updateDoc,
   addDoc,
   deleteDoc,
@@ -147,51 +150,6 @@ const Icons = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlg5lkxmu';
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'PawsCura_ScanImg';
-
-function getItemsPerPage() {
-  return Math.max(6, Math.floor((window.innerHeight - 240) / 54) - 1);
-}
-
-function Pagination({ currentPage, totalItems, pageSize, onPageChange }) {
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  if (totalItems === 0) return null;
-
-  const start = (currentPage - 1) * pageSize + 1;
-  const end = Math.min(currentPage * pageSize, totalItems);
-
-  return (
-    <div className="pagination-bar">
-      <span className="pagination-info">
-        Showing {start}–{end} of {totalItems}
-      </span>
-      {totalPages > 1 && (
-        <div className="pagination-controls">
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-          >
-            Previous
-          </button>
-          <span className="pagination-page-indicator">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Blank forms ───────────────────────────────────────────────────────────────
 const BLANK_CLINIC = {
@@ -218,34 +176,13 @@ const BLANK_AD = {
   description: '',
   imageUrl: '',
   targetUrl: '',
+  adType: 'rich_media',
   isActive: true,
   startDate: '',
   endDate: '',
 };
 
 // ── Utility ───────────────────────────────────────────────────────────────────
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[\d+\-()\s/]{7,}$/;
-
-function isValidHttpUrl(val) {
-  try {
-    const u = new URL(val);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-function scrollToFirstError(formEl) {
-  requestAnimationFrame(() => {
-    const firstInvalid = formEl?.querySelector('.input-error');
-    if (firstInvalid) {
-      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstInvalid.focus({ preventScroll: true });
-    }
-  });
-}
-
 function fmt12(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -283,6 +220,79 @@ function buildHoursString(data) {
   return primary;
 }
 
+function getOrderedDaysRange(startDay, endDay, closedDaysList = []) {
+  const startIdx = WEEK_DAYS.indexOf(startDay);
+  if (startIdx === -1) return [];
+  const endIdx = WEEK_DAYS.indexOf(endDay || startDay);
+  const effectiveEnd = endIdx === -1 ? startIdx : endIdx;
+  const closedSet = new Set(Array.isArray(closedDaysList) ? closedDaysList : []);
+  const days = [];
+  let cur = startIdx;
+  for (let steps = 0; steps < WEEK_DAYS.length; steps += 1) {
+    const dayName = WEEK_DAYS[cur];
+    if (!closedSet.has(dayName)) days.push(dayName);
+    if (cur === effectiveEnd) break;
+    cur = (cur + 1) % WEEK_DAYS.length;
+  }
+  return days;
+}
+
+function expandClinicScheduleRows(data = {}) {
+  const byDay = new Map();
+  const primaryDays = getOrderedDaysRange(
+    data.startDay || 'Monday',
+    data.endDay || 'Friday',
+    data.closedDaysList || []
+  );
+  for (const day of primaryDays) {
+    byDay.set(day, {
+      day,
+      openTime: data.openTime || '',
+      closeTime: data.closeTime || '',
+    });
+  }
+  if (data.hasSecondarySchedule && data.secondaryStartDay) {
+    const secondaryDays = getOrderedDaysRange(
+      data.secondaryStartDay,
+      data.secondaryEndDay || data.secondaryStartDay,
+      []
+    );
+    for (const day of secondaryDays) {
+      byDay.set(day, {
+        day,
+        openTime: data.secondaryOpenTime || '',
+        closeTime: data.secondaryCloseTime || '',
+      });
+    }
+  }
+  return Array.from(byDay.values());
+}
+
+async function deleteClinicSchedules(vetClinicId) {
+  if (!vetClinicId) return;
+  const q = query(collection(db, 'clinicSchedules'), where('vetClinicId', '==', vetClinicId));
+  const snap = await getDocs(q);
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+}
+
+async function syncClinicSchedules(vetClinicId, clinicData) {
+  if (!vetClinicId) return;
+  await deleteClinicSchedules(vetClinicId);
+  const rows = expandClinicScheduleRows(clinicData);
+  await Promise.all(
+    rows.map((row) =>
+      addDoc(collection(db, 'clinicSchedules'), {
+        vetClinicId,
+        day: row.day,
+        openTime: row.openTime,
+        closeTime: row.closeTime,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+    )
+  );
+}
+
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
   // Auth
@@ -291,20 +301,11 @@ export default function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [loginFieldErrors, setLoginFieldErrors] = useState({});
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Navigation
   const [activeTab, setActiveTab] = useState('clinics');
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(getItemsPerPage);
-
-  useEffect(() => {
-    const onResize = () => setItemsPerPage(getItemsPerPage());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   // Firestore data
   const [clinics, setClinics] = useState([]);
@@ -312,24 +313,20 @@ export default function App() {
 
   // Modal state
   const [clinicModal, setClinicModal] = useState({ open: false, mode: 'add', data: BLANK_CLINIC, id: null });
-  const [clinicErrors, setClinicErrors] = useState({});
   const [adModal, setAdModal] = useState({ open: false, mode: 'add', data: BLANK_AD, id: null });
-  const [adErrors, setAdErrors] = useState({});
-  const [adImageUploading, setAdImageUploading] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null, title: '' });
-  const [deleteError, setDeleteError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   // Admin Profile state
   const [profileForm, setProfileForm] = useState({
     displayName: '',
+    photoURL: '',
     email: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-  const [profileErrors, setProfileErrors] = useState({});
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
 
@@ -356,6 +353,7 @@ export default function App() {
         setUser(u);
         setProfileForm({
           displayName: u.displayName || '',
+          photoURL: u.photoURL || '',
           email: u.email || '',
           currentPassword: '',
           newPassword: '',
@@ -390,23 +388,11 @@ export default function App() {
   // ── Login (Strict Admin Role Enforced) ──
   const handleLogin = async (e) => {
     e.preventDefault();
-    const formEl = e.currentTarget;
     setLoginError('');
-    const errs = {};
-    if (!loginEmail.trim()) {
-      errs.email = 'Email address is required.';
-    } else if (!EMAIL_REGEX.test(loginEmail.trim())) {
-      errs.email = 'Enter a valid email address.';
-    }
-    if (!loginPassword.trim()) {
-      errs.password = 'Passcode is required.';
-    }
-    if (Object.keys(errs).length > 0) {
-      setLoginFieldErrors(errs);
-      scrollToFirstError(formEl);
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      setLoginError('Please enter both email and password.');
       return;
     }
-    setLoginFieldErrors({});
     setLoginLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, loginEmail.trim(), loginPassword.trim());
@@ -422,15 +408,13 @@ export default function App() {
         }
       }
     } catch (err) {
+      let msg = 'Authentication failed. Please check your credentials.';
       if (['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
-        setLoginFieldErrors({ email: 'Check your email address.', password: 'Invalid email or passcode.' });
-        scrollToFirstError(formEl);
+        msg = 'Invalid email address or passcode.';
       } else if (err.code === 'auth/invalid-email') {
-        setLoginFieldErrors({ email: 'Invalid email format.' });
-        scrollToFirstError(formEl);
-      } else {
-        setLoginError('Authentication failed. Please check your credentials.');
+        msg = 'Invalid email format.';
       }
+      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -441,13 +425,13 @@ export default function App() {
     if (auth.currentUser) {
       setProfileForm({
         displayName: auth.currentUser.displayName || '',
+        photoURL: auth.currentUser.photoURL || '',
         email: auth.currentUser.email || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
     }
-    setProfileErrors({});
     setProfileMessage({ type: '', text: '' });
     setActiveTab('profile');
     setSearchQuery('');
@@ -455,54 +439,49 @@ export default function App() {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    const formEl = e.currentTarget;
     setProfileMessage({ type: '', text: '' });
 
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
     const trimmedName = profileForm.displayName.trim();
+    const trimmedPhoto = profileForm.photoURL.trim();
     const trimmedEmail = profileForm.email.trim();
     const emailChanged = trimmedEmail && trimmedEmail !== (currentUser.email || '');
-    const passwordChanged = Boolean(profileForm.newPassword || profileForm.confirmPassword);
-    const profileInfoChanged = trimmedName !== (currentUser.displayName || '');
+    const passwordChanged = Boolean(profileForm.newPassword);
+    const profileInfoChanged =
+      trimmedName !== (currentUser.displayName || '') ||
+      trimmedPhoto !== (currentUser.photoURL || '');
 
-    const errs = {};
-    if (!trimmedName) {
-      errs.displayName = 'Display name is required.';
+    if (!emailChanged && !passwordChanged && !profileInfoChanged) {
+      setProfileMessage({ type: 'error', text: 'No changes detected to update.' });
+      return;
     }
+
     if (!trimmedEmail) {
-      errs.email = 'Email address is required.';
-    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
-      errs.email = 'Enter a valid email address.';
+      setProfileMessage({ type: 'error', text: 'Email address cannot be empty.' });
+      return;
     }
 
     if (passwordChanged) {
-      if (!profileForm.newPassword || profileForm.newPassword.length < 6) {
-        errs.newPassword = 'New passcode must be at least 6 characters.';
+      if (profileForm.newPassword.length < 6) {
+        setProfileMessage({ type: 'error', text: 'New passcode must be at least 6 characters.' });
+        return;
       }
       if (profileForm.newPassword !== profileForm.confirmPassword) {
-        errs.confirmPassword = 'Passcodes do not match.';
+        setProfileMessage({ type: 'error', text: 'New passcode and confirmation do not match.' });
+        return;
       }
     }
 
     if ((emailChanged || passwordChanged) && !profileForm.currentPassword) {
-      errs.currentPassword = 'Enter your current passcode to verify this change.';
-    }
-
-    if (Object.keys(errs).length > 0) {
-      setProfileErrors(errs);
-      scrollToFirstError(formEl);
+      setProfileMessage({
+        type: 'error',
+        text: 'Please enter your current passcode to update your email or passcode.'
+      });
       return;
     }
 
-    if (!emailChanged && !passwordChanged && !profileInfoChanged) {
-      setProfileErrors({ displayName: 'Modify at least one field before saving.' });
-      scrollToFirstError(formEl);
-      return;
-    }
-
-    setProfileErrors({});
     setProfileSaving(true);
     try {
       // Re-authenticate if sensitive fields (email or password) are being updated
@@ -514,6 +493,7 @@ export default function App() {
       if (profileInfoChanged) {
         await updateProfile(currentUser, {
           displayName: trimmedName,
+          photoURL: trimmedPhoto,
         });
       }
 
@@ -537,6 +517,7 @@ export default function App() {
       setProfileForm(prev => ({
         ...prev,
         displayName: currentUser.displayName || '',
+        photoURL: currentUser.photoURL || '',
         email: currentUser.email || '',
         currentPassword: '',
         newPassword: '',
@@ -549,140 +530,48 @@ export default function App() {
       });
     } catch (err) {
       console.error(err);
+      let msg = 'Failed to update profile. Please try again.';
       if (['auth/wrong-password', 'auth/invalid-credential'].includes(err.code)) {
-        setProfileErrors({ currentPassword: 'Current passcode is incorrect.' });
-        scrollToFirstError(formEl);
+        msg = 'Current passcode is incorrect.';
       } else if (err.code === 'auth/email-already-in-use') {
-        setProfileErrors({ email: 'That email address is already in use.' });
-        scrollToFirstError(formEl);
+        msg = 'That email address is already in use by another account.';
       } else if (err.code === 'auth/invalid-email') {
-        setProfileErrors({ email: 'Enter a valid email address.' });
-        scrollToFirstError(formEl);
+        msg = 'Please enter a valid email address.';
       } else if (err.code === 'auth/weak-password') {
-        setProfileErrors({ newPassword: 'Passcode must be at least 6 characters.' });
-        scrollToFirstError(formEl);
+        msg = 'New passcode is too weak. Please use at least 6 characters.';
       } else if (err.code === 'auth/requires-recent-login') {
-        setProfileErrors({ currentPassword: 'Enter your current passcode to verify your identity.' });
-        scrollToFirstError(formEl);
-      } else {
-        setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+        msg = 'Please enter your current passcode to verify your identity.';
       }
+      setProfileMessage({ type: 'error', text: msg });
     } finally {
       setProfileSaving(false);
     }
   };
 
   // ── Clinic CRUD ──
-  const openAddClinic = () => {
-    setClinicErrors({});
-    setClinicModal({ open: true, mode: 'add', data: { ...BLANK_CLINIC }, id: null });
-  };
+  const openAddClinic = () => setClinicModal({ open: true, mode: 'add', data: { ...BLANK_CLINIC }, id: null });
   const openEditClinic = (clinic) => {
-    setClinicErrors({});
     const closedDaysList = Array.isArray(clinic.closedDaysList) ? clinic.closedDaysList : [];
     const startDay = clinic.startDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[0] : 'Monday');
     const endDay = clinic.endDay || (Array.isArray(clinic.operatingDays) && clinic.operatingDays.length > 0 ? clinic.operatingDays[clinic.operatingDays.length - 1] : 'Friday');
     setClinicModal({
       open: true, mode: 'edit',
-      data: {
-        ...BLANK_CLINIC,
-        ...clinic,
-        name: clinic.name || '',
-        address: clinic.address || '',
-        phone: clinic.phone || '',
-        email: clinic.email || '',
-        latitude: clinic.latitude ?? '',
-        longitude: clinic.longitude ?? '',
-        closedDaysList,
-        startDay,
-        endDay,
-      },
+      data: { ...BLANK_CLINIC, ...clinic, closedDaysList, startDay, endDay },
       id: clinic.id
     });
   };
-  const closeClinicModal = () => {
-    setClinicErrors({});
-    setClinicModal(m => ({ ...m, open: false }));
-  };
+  const closeClinicModal = () => setClinicModal(m => ({ ...m, open: false }));
 
   const handleSaveClinic = async (e) => {
     e.preventDefault();
-    const formEl = e.currentTarget;
-    const errs = {};
-    const trimmedName = (clinicModal.data.name || '').trim();
-    const trimmedAddress = (clinicModal.data.address || '').trim();
-    const trimmedPhone = (clinicModal.data.phone || '').trim();
-    const trimmedEmail = (clinicModal.data.email || '').trim();
-
-    if (!trimmedName) {
-      errs.name = 'Clinic name is required.';
-    }
-    if (!trimmedAddress) {
-      errs.address = 'Address is required.';
-    }
-    if (!trimmedPhone) {
-      errs.phone = 'Phone number is required.';
-    } else if (!PHONE_REGEX.test(trimmedPhone)) {
-      errs.phone = 'Enter a valid phone number.';
-    }
-    if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
-      errs.email = 'Enter a valid email address.';
-    }
-
-    if (!clinicModal.data.openTime) {
-      errs.openTime = 'Open time is required.';
-    }
-    if (!clinicModal.data.closeTime) {
-      errs.closeTime = 'Close time is required.';
-    } else if (clinicModal.data.openTime && clinicModal.data.closeTime <= clinicModal.data.openTime) {
-      errs.closeTime = 'Close time must be after open time.';
-    }
-
-    if (clinicModal.data.hasSecondarySchedule) {
-      if (!clinicModal.data.secondaryOpenTime) {
-        errs.secondaryOpenTime = 'Open time is required.';
-      }
-      if (!clinicModal.data.secondaryCloseTime) {
-        errs.secondaryCloseTime = 'Close time is required.';
-      } else if (
-        clinicModal.data.secondaryOpenTime &&
-        clinicModal.data.secondaryCloseTime <= clinicModal.data.secondaryOpenTime
-      ) {
-        errs.secondaryCloseTime = 'Close time must be after open time.';
-      }
-    }
-
-    const rawLat = String(clinicModal.data.latitude ?? '').trim();
-    const rawLng = String(clinicModal.data.longitude ?? '').trim();
-    const parsedLat = rawLat !== '' ? Number(rawLat) : null;
-    const parsedLng = rawLng !== '' ? Number(rawLng) : null;
-
-    if (rawLat === '') {
-      errs.latitude = 'Latitude is required (click the map or enter a value).';
-    } else if (!Number.isFinite(parsedLat) || parsedLat < -90 || parsedLat > 90) {
-      errs.latitude = 'Must be between -90 and 90.';
-    }
-
-    if (rawLng === '') {
-      errs.longitude = 'Longitude is required (click the map or enter a value).';
-    } else if (!Number.isFinite(parsedLng) || parsedLng < -180 || parsedLng > 180) {
-      errs.longitude = 'Must be between -180 and 180.';
-    }
-
-    if (Object.keys(errs).length > 0) {
-      setClinicErrors(errs);
-      scrollToFirstError(formEl);
-      return;
-    }
-
-    setClinicErrors({});
+    if (!clinicModal.data.name.trim()) { alert('Clinic name is required.'); return; }
     setSaving(true);
     try {
       const payload = {
-        name: trimmedName,
-        address: trimmedAddress,
-        phone: trimmedPhone,
-        email: trimmedEmail,
+        name: clinicModal.data.name.trim(),
+        address: clinicModal.data.address.trim(),
+        phone: clinicModal.data.phone.trim(),
+        email: clinicModal.data.email.trim(),
         startDay: clinicModal.data.startDay || 'Monday',
         endDay: clinicModal.data.endDay || 'Friday',
         openTime: clinicModal.data.openTime || '',
@@ -694,30 +583,32 @@ export default function App() {
         secondaryOpenTime: clinicModal.data.secondaryOpenTime || '',
         secondaryCloseTime: clinicModal.data.secondaryCloseTime || '',
         hours: buildHoursString(clinicModal.data),
-        latitude: parsedLat,
-        longitude: parsedLng,
+        latitude: clinicModal.data.latitude ? parseFloat(clinicModal.data.latitude) : null,
+        longitude: clinicModal.data.longitude ? parseFloat(clinicModal.data.longitude) : null,
+        status: clinicModal.data.status || 'active',
+        status: clinicModal.data.status || 'active',
         userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
+      let savedClinicId = clinicModal.id;
       if (clinicModal.mode === 'add') {
         payload.createdAt = serverTimestamp();
-        await addDoc(collection(db, 'vetClinics'), payload);
+        const createdRef = await addDoc(collection(db, 'vetClinics'), payload);
+        savedClinicId = createdRef.id;
       } else {
         await updateDoc(doc(db, 'vetClinics', clinicModal.id), payload);
       }
+      await syncClinicSchedules(savedClinicId, payload);
       closeClinicModal();
     } catch (err) {
       console.error(err);
-      setClinicErrors({ form: 'Failed to save clinic. Please try again.' });
+      alert('Failed to save clinic. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const triggerDeleteClinic = (id, name) => {
-    setDeleteError('');
-    setDeleteModal({ open: true, type: 'clinic', id, title: name });
-  };
+  const triggerDeleteClinic = (id, name) => setDeleteModal({ open: true, type: 'clinic', id, title: name });
 
   // ── Ads CRUD ──
   const openAddAd = () => {
@@ -736,6 +627,7 @@ export default function App() {
         description: ad.description || '',
         imageUrl: ad.imageUrl || '',
         targetUrl: ad.targetUrl || '',
+        adType: ad.adType || 'rich_media',
         startDate: ad.startDate || '',
         endDate: ad.endDate || '',
         isActive: ad.isActive ?? true,
@@ -750,10 +642,12 @@ export default function App() {
   };
 
   const handleAdImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+    const inputEl = e.target;
+    const file = inputEl.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
+      inputEl.value = '';
       setAdErrors(prev => ({ ...prev, imageUrl: 'Please select a valid image file (PNG, JPG, WEBP).' }));
       return;
     }
@@ -772,11 +666,11 @@ export default function App() {
         headers: { Accept: 'application/json' },
       });
 
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error('Cloudinary upload failed');
+        throw new Error(json?.error?.message || `Cloudinary HTTP ${res.status}`);
       }
 
-      const json = await res.json();
       if (json.secure_url) {
         setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: json.secure_url } }));
       } else {
@@ -784,67 +678,32 @@ export default function App() {
       }
     } catch (err) {
       console.error(err);
-      setAdErrors(prev => ({ ...prev, imageUrl: 'Failed to upload image to Cloudinary. Please try again.' }));
+      setAdErrors(prev => ({ ...prev, imageUrl: err?.message || 'Failed to upload image to Cloudinary. Please try again.' }));
     } finally {
+      inputEl.value = '';
       setAdImageUploading(false);
     }
   };
 
   const handleSaveAd = async (e) => {
     e.preventDefault();
-    const formEl = e.currentTarget;
-    const errs = {};
-    const trimmedTitle = (adModal.data.title || '').trim();
-    const trimmedDescription = (adModal.data.description || '').trim();
-    const trimmedImage = (adModal.data.imageUrl || '').trim();
-    const trimmedTarget = (adModal.data.targetUrl || '').trim();
-
-    if (!trimmedTitle) {
-      errs.title = 'Advertisement title is required.';
-    }
-    if (!trimmedDescription) {
-      errs.description = 'Description is required.';
-    }
-    if (adImageUploading) {
-      errs.imageUrl = 'Please wait for the image upload to finish.';
-    } else if (!trimmedImage) {
-      errs.imageUrl = 'Please upload an advertisement image.';
-    }
-    if (!trimmedTarget) {
-      errs.targetUrl = 'Target URL is required.';
-    } else if (!isValidHttpUrl(trimmedTarget)) {
-      errs.targetUrl = 'Enter a valid URL starting with http:// or https://.';
-    }
-    if (!adModal.data.startDate) {
-      errs.startDate = 'Start date is required.';
-    }
-    if (!adModal.data.endDate) {
-      errs.endDate = 'End date is required.';
-    } else if (adModal.data.startDate && adModal.data.endDate < adModal.data.startDate) {
-      errs.endDate = 'End date cannot be earlier than start date.';
-    }
-
-    if (Object.keys(errs).length > 0) {
-      setAdErrors(errs);
-      scrollToFirstError(formEl);
-      return;
-    }
-
-    setAdErrors({});
+    if (!adModal.data.title.trim()) { alert('Advertisement title is required.'); return; }
     setSaving(true);
     try {
       const payload = {
-        title: trimmedTitle,
-        description: trimmedDescription,
-        imageUrl: trimmedImage,
-        targetUrl: trimmedTarget,
+        title: adModal.data.title.trim(),
+        description: adModal.data.description.trim(),
+        imageUrl: adModal.data.imageUrl.trim(),
+        targetUrl: adModal.data.targetUrl.trim(),
+        adType: adModal.data.adType || 'rich_media',
         isActive: Boolean(adModal.data.isActive),
-        startDate: adModal.data.startDate,
-        endDate: adModal.data.endDate,
+        startDate: adModal.data.startDate || null,
+        endDate: adModal.data.endDate || null,
         userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
       if (adModal.mode === 'add') {
+        payload.clicksCount = 0;
         payload.createdAt = serverTimestamp();
         await addDoc(collection(db, 'ads'), payload);
       } else {
@@ -853,30 +712,26 @@ export default function App() {
       closeAdModal();
     } catch (err) {
       console.error(err);
-      setAdErrors({ form: 'Failed to save advertisement. Please try again.' });
+      setAdErrors({ form: err?.message ? `Failed to save advertisement: ${err.message}` : 'Failed to save advertisement. Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const triggerDeleteAd = (id, title) => {
-    setDeleteError('');
-    setDeleteModal({ open: true, type: 'ad', id, title });
-  };
+  const triggerDeleteAd = (id, title) => setDeleteModal({ open: true, type: 'ad', id, title });
 
   // ── Delete Confirmation Handlers ──
   const closeDeleteModal = () => {
     if (deleting) return;
-    setDeleteError('');
     setDeleteModal({ open: false, type: '', id: null, title: '' });
   };
 
   const confirmDelete = async () => {
     if (!deleteModal.id) return;
     setDeleting(true);
-    setDeleteError('');
     try {
       if (deleteModal.type === 'clinic') {
+        await deleteClinicSchedules(deleteModal.id);
         await deleteDoc(doc(db, 'vetClinics', deleteModal.id));
       } else if (deleteModal.type === 'ad') {
         await deleteDoc(doc(db, 'ads', deleteModal.id));
@@ -884,7 +739,7 @@ export default function App() {
       closeDeleteModal();
     } catch (err) {
       console.error(err);
-      setDeleteError(`Failed to delete ${deleteModal.type === 'clinic' ? 'clinic' : 'advertisement'}. Please try again.`);
+      alert(`Failed to delete ${deleteModal.type === 'clinic' ? 'clinic' : 'advertisement'}. Please try again.`);
     } finally {
       setDeleting(false);
     }
@@ -895,6 +750,7 @@ export default function App() {
       await updateDoc(doc(db, 'ads', id), { isActive: !current, updatedAt: serverTimestamp() });
     } catch (err) {
       console.error(err);
+      alert('Failed to toggle advertisement status.');
     }
   };
 
@@ -908,16 +764,6 @@ export default function App() {
     a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, searchQuery]);
-
-  const activeListLength = activeTab === 'clinics' ? filteredClinics.length : filteredAds.length;
-  const maxPage = Math.max(1, Math.ceil(activeListLength / itemsPerPage));
-  const safePage = Math.min(currentPage, maxPage);
-  const paginatedClinics = filteredClinics.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
-  const paginatedAds = filteredAds.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
   // ── Loading screen ──
   if (authLoading) {
@@ -950,34 +796,14 @@ export default function App() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} noValidate>
+          <form onSubmit={handleLogin}>
             <div className="form-group">
               <label className="form-label">Email Address</label>
-              <input
-                type="email"
-                className={`form-control ${loginFieldErrors.email ? 'input-error' : ''}`}
-                placeholder="admin@pawscura.com"
-                value={loginEmail}
-                onChange={e => {
-                  setLoginEmail(e.target.value);
-                  if (loginFieldErrors.email) setLoginFieldErrors(prev => ({ ...prev, email: '' }));
-                }}
-              />
-              {loginFieldErrors.email && <span className="field-error">{loginFieldErrors.email}</span>}
+              <input type="email" className="form-control" placeholder="admin@pawscura.com" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
             </div>
             <div className="form-group" style={{ marginBottom: '28px' }}>
               <label className="form-label">Passcode</label>
-              <input
-                type="password"
-                className={`form-control ${loginFieldErrors.password ? 'input-error' : ''}`}
-                placeholder="••••••••"
-                value={loginPassword}
-                onChange={e => {
-                  setLoginPassword(e.target.value);
-                  if (loginFieldErrors.password) setLoginFieldErrors(prev => ({ ...prev, password: '' }));
-                }}
-              />
-              {loginFieldErrors.password && <span className="field-error">{loginFieldErrors.password}</span>}
+              <input type="password" className="form-control" placeholder="••••••••" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
             </div>
             <button type="submit" className="btn-primary" disabled={loginLoading}
               style={{ width: '100%', padding: '13px', fontSize: '14px', fontWeight: '700', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #794B35 0%, #D88D59 100%)', color: '#FFF8F1', border: 'none', borderRadius: 'var(--radius-md)' }}>
@@ -1140,71 +966,63 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <>
-                <div className="table-container">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '22%' }}>Clinic Name</th>
-                        <th style={{ width: '28%' }}>Address</th>
-                        <th style={{ width: '15%' }}>Phone</th>
-                        <th style={{ width: '21%' }}>Hours</th>
-                        <th style={{ width: '170px', textAlign: 'center' }}>Actions</th>
+              <div className="table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Clinic Name</th>
+                      <th>Address</th>
+                      <th>Phone</th>
+                      <th>Hours</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClinics.map(clinic => (
+                      <tr key={clinic.id}>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '3px' }}>{clinic.name}</div>
+                          {clinic.email && <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{clinic.email}</div>}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                            <span style={{ marginTop: '2px', color: 'var(--color-text-muted)', flexShrink: 0 }}><Icons.MapPin /></span>
+                            <span style={{ fontSize: '13px' }}>{clinic.address || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Phone /></span>
+                            <span>{clinic.phone || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'var(--color-text-muted)' }}><Icons.Clock /></span>
+                            <span>{clinic.hours || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => openEditClinic(clinic)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Edit /> Edit
+                            </button>
+                            <button
+                              onClick={() => triggerDeleteClinic(clinic.id, clinic.name)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Trash /> Delete
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedClinics.map(clinic => (
-                        <tr key={clinic.id}>
-                          <td>
-                            <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '3px' }}>{clinic.name}</div>
-                            {clinic.email && <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{clinic.email}</div>}
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
-                              <span style={{ marginTop: '2px', color: 'var(--color-text-muted)', flexShrink: 0 }}><Icons.MapPin /></span>
-                              <span style={{ fontSize: '13px' }}>{clinic.address || '—'}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <span style={{ color: 'var(--color-text-muted)' }}><Icons.Phone /></span>
-                              <span>{clinic.phone || '—'}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <span style={{ color: 'var(--color-text-muted)' }}><Icons.Clock /></span>
-                              <span>{clinic.hours || '—'}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                              <button
-                                onClick={() => openEditClinic(clinic)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                              >
-                                <Icons.Edit /> Edit
-                              </button>
-                              <button
-                                onClick={() => triggerDeleteClinic(clinic.id, clinic.name)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                              >
-                                <Icons.Trash /> Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <Pagination
-                  currentPage={safePage}
-                  totalItems={filteredClinics.length}
-                  pageSize={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                />
-              </>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
@@ -1227,86 +1045,78 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <>
-                <div className="table-container">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '28%' }}>Advertisement Details</th>
-                        <th style={{ width: '11%' }}>Image URL</th>
-                        <th style={{ width: '17%' }}>Target URL</th>
-                        <th style={{ width: '17%' }}>Duration</th>
-                        <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-                        <th style={{ width: '170px', textAlign: 'center' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedAds.map(ad => (
-                        <tr key={ad.id}>
-                          <td>
-                            <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '4px' }}>{ad.title}</div>
-                            {ad.description && (
-                              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {ad.description}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            {ad.imageUrl ? (
-                              <a href={ad.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
-                                <Icons.Image /> Preview
-                              </a>
-                            ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
-                          </td>
-                          <td>
-                            {ad.targetUrl ? (
-                              <a href={ad.targetUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                <Icons.Link /> {ad.targetUrl.replace(/^https?:\/\//, '')}
-                              </a>
-                            ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                              {ad.startDate || '—'} → {ad.endDate || '—'}
+              <div className="table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Advertisement Details</th>
+                      <th>Image URL</th>
+                      <th>Target URL</th>
+                      <th>Duration</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAds.map(ad => (
+                      <tr key={ad.id}>
+                        <td>
+                          <div style={{ fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: '4px' }}>{ad.title}</div>
+                          {ad.description && (
+                            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ad.description}
                             </div>
-                          </td>
-                          <td style={{ textAlign: 'center', width: '120px' }}>
+                          )}
+                        </td>
+                        <td>
+                          {ad.imageUrl ? (
+                            <a href={ad.imageUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>
+                              <Icons.Image /> Preview
+                            </a>
+                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                        </td>
+                        <td>
+                          {ad.targetUrl ? (
+                            <a href={ad.targetUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-brand)', fontSize: '12px', textDecoration: 'none', fontWeight: 600, maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <Icons.Link /> {ad.targetUrl.replace(/^https?:\/\//, '')}
+                            </a>
+                          ) : <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>—</span>}
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                            {ad.startDate || '—'} → {ad.endDate || '—'}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => handleToggleAdActive(ad.id, ad.isActive)}
+                            title={ad.isActive ? 'Click to deactivate' : 'Click to activate'}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 auto', padding: '6px 10px', borderRadius: 'var(--radius-sm)', color: ad.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 700, fontSize: '12px', backgroundColor: ad.isActive ? 'var(--color-success-bg)' : 'var(--color-overlay)' }}
+                          >
+                            {ad.isActive ? <><Icons.ToggleOn /> Active</> : <><Icons.ToggleOff /> Inactive</>}
+                          </button>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                             <button
-                              onClick={() => handleToggleAdActive(ad.id, ad.isActive)}
-                              title={ad.isActive ? 'Click to deactivate' : 'Click to activate'}
-                              style={{ border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '104px', padding: '6px 10px', borderRadius: 'var(--radius-sm)', color: ad.isActive ? 'var(--color-success)' : 'var(--color-text-muted)', fontWeight: 700, fontSize: '12px', backgroundColor: ad.isActive ? 'var(--color-success-bg)' : 'var(--color-overlay)' }}
+                              onClick={() => openEditAd(ad)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
                             >
-                              {ad.isActive ? <><Icons.ToggleOn /> Active</> : <><Icons.ToggleOff /> Inactive</>}
+                              <Icons.Edit /> Edit
                             </button>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                              <button
-                                onClick={() => openEditAd(ad)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-text-primary)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                              >
-                                <Icons.Edit /> Edit
-                              </button>
-                              <button
-                                onClick={() => triggerDeleteAd(ad.id, ad.title)}
-                                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
-                              >
-                                <Icons.Trash /> Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <Pagination
-                  currentPage={safePage}
-                  totalItems={filteredAds.length}
-                  pageSize={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                />
-              </>
+                            <button
+                              onClick={() => triggerDeleteAd(ad.id, ad.title)}
+                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', border: 'none', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                            >
+                              <Icons.Trash /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
@@ -1332,9 +1142,9 @@ export default function App() {
                 overflow: 'hidden',
                 border: '3px solid var(--color-border)'
               }}>
-                {user.photoURL ? (
+                {profileForm.photoURL || user.photoURL ? (
                   <img
-                    src={user.photoURL}
+                    src={profileForm.photoURL || user.photoURL}
                     alt={adminDisplayName}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={e => { e.currentTarget.style.display = 'none'; }}
@@ -1399,36 +1209,42 @@ export default function App() {
                 </div>
               )}
 
-              <form onSubmit={handleUpdateProfile} noValidate>
+              <form onSubmit={handleUpdateProfile}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div className="form-group">
                     <label className="form-label">Display Name</label>
                     <input
                       type="text"
-                      className={`form-control ${profileErrors.displayName ? 'input-error' : ''}`}
+                      className="form-control"
                       placeholder="e.g. PawsCura Admin"
                       value={profileForm.displayName}
-                      onChange={e => {
-                        setProfileForm(f => ({ ...f, displayName: e.target.value }));
-                        if (profileErrors.displayName) setProfileErrors(prev => ({ ...prev, displayName: '' }));
-                      }}
+                      onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
                     />
-                    {profileErrors.displayName && <span className="field-error">{profileErrors.displayName}</span>}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Email Address</label>
                     <input
                       type="email"
-                      className={`form-control ${profileErrors.email ? 'input-error' : ''}`}
+                      className="form-control"
                       placeholder="admin@pawscura.com"
+                      required
                       value={profileForm.email}
-                      onChange={e => {
-                        setProfileForm(f => ({ ...f, email: e.target.value }));
-                        if (profileErrors.email) setProfileErrors(prev => ({ ...prev, email: '' }));
-                      }}
+                      onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
                     />
-                    {profileErrors.email && <span className="field-error">{profileErrors.email}</span>}
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">
+                      Profile Photo URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span>
+                    </label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      placeholder="https://example.com/avatar.png"
+                      value={profileForm.photoURL}
+                      onChange={e => setProfileForm(f => ({ ...f, photoURL: e.target.value }))}
+                    />
                   </div>
                 </div>
 
@@ -1446,30 +1262,22 @@ export default function App() {
                     <label className="form-label">New Passcode</label>
                     <input
                       type="password"
-                      className={`form-control ${profileErrors.newPassword ? 'input-error' : ''}`}
+                      className="form-control"
                       placeholder="New passcode (min. 6 chars)"
                       value={profileForm.newPassword}
-                      onChange={e => {
-                        setProfileForm(f => ({ ...f, newPassword: e.target.value }));
-                        if (profileErrors.newPassword) setProfileErrors(prev => ({ ...prev, newPassword: '' }));
-                      }}
+                      onChange={e => setProfileForm(f => ({ ...f, newPassword: e.target.value }))}
                     />
-                    {profileErrors.newPassword && <span className="field-error">{profileErrors.newPassword}</span>}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Confirm New Passcode</label>
                     <input
                       type="password"
-                      className={`form-control ${profileErrors.confirmPassword ? 'input-error' : ''}`}
+                      className="form-control"
                       placeholder="Re-enter new passcode"
                       value={profileForm.confirmPassword}
-                      onChange={e => {
-                        setProfileForm(f => ({ ...f, confirmPassword: e.target.value }));
-                        if (profileErrors.confirmPassword) setProfileErrors(prev => ({ ...prev, confirmPassword: '' }));
-                      }}
+                      onChange={e => setProfileForm(f => ({ ...f, confirmPassword: e.target.value }))}
                     />
-                    {profileErrors.confirmPassword && <span className="field-error">{profileErrors.confirmPassword}</span>}
                   </div>
 
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -1478,15 +1286,11 @@ export default function App() {
                     </label>
                     <input
                       type="password"
-                      className={`form-control ${profileErrors.currentPassword ? 'input-error' : ''}`}
+                      className="form-control"
                       placeholder="Enter your current passcode to verify changes"
                       value={profileForm.currentPassword}
-                      onChange={e => {
-                        setProfileForm(f => ({ ...f, currentPassword: e.target.value }));
-                        if (profileErrors.currentPassword) setProfileErrors(prev => ({ ...prev, currentPassword: '' }));
-                      }}
+                      onChange={e => setProfileForm(f => ({ ...f, currentPassword: e.target.value }))}
                     />
-                    {profileErrors.currentPassword && <span className="field-error">{profileErrors.currentPassword}</span>}
                   </div>
                 </div>
 
@@ -1505,74 +1309,58 @@ export default function App() {
           CLINIC MODAL — Add / Edit
       ══════════════════════════════════════════════════════════ */}
       {clinicModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <div className="modal-overlay" onClick={closeClinicModal}>
+          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={closeClinicModal}><Icons.Close /></button>
             <h3 className="modal-title">
               {clinicModal.mode === 'add' ? 'Add New Veterinary Clinic' : 'Edit Clinic Information'}
             </h3>
 
-            <form onSubmit={handleSaveClinic} noValidate>
-              {clinicErrors.form && <div className="field-error" style={{ marginBottom: '12px' }}>{clinicErrors.form}</div>}
+            <form onSubmit={handleSaveClinic}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Clinic Name *</label>
+                  <label className="form-label">Clinic Name</label>
                   <input
                     type="text"
-                    className={`form-control ${clinicErrors.name ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="e.g. PetCare Animal Hospital"
+                    required
                     value={clinicModal.data.name}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, name: e.target.value } }));
-                      if (clinicErrors.name) setClinicErrors(prev => ({ ...prev, name: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, name: e.target.value } }))}
                   />
-                  {clinicErrors.name && <span className="field-error">{clinicErrors.name}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Address *</label>
+                  <label className="form-label">Address</label>
                   <input
                     type="text"
-                    className={`form-control ${clinicErrors.address ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="e.g. 123 Veterinary Lane, Manila"
                     value={clinicModal.data.address}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, address: e.target.value } }));
-                      if (clinicErrors.address) setClinicErrors(prev => ({ ...prev, address: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, address: e.target.value } }))}
                   />
-                  {clinicErrors.address && <span className="field-error">{clinicErrors.address}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Phone Number *</label>
+                  <label className="form-label">Phone Number</label>
                   <input
                     type="text"
-                    className={`form-control ${clinicErrors.phone ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="+63 123 123 1234"
                     value={clinicModal.data.phone}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, phone: e.target.value } }));
-                      if (clinicErrors.phone) setClinicErrors(prev => ({ ...prev, phone: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, phone: e.target.value } }))}
                   />
-                  {clinicErrors.phone && <span className="field-error">{clinicErrors.phone}</span>}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Email Address</label>
                   <input
                     type="email"
-                    className={`form-control ${clinicErrors.email ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="clinic@example.com"
                     value={clinicModal.data.email}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, email: e.target.value } }));
-                      if (clinicErrors.email) setClinicErrors(prev => ({ ...prev, email: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, email: e.target.value } }))}
                   />
-                  {clinicErrors.email && <span className="field-error">{clinicErrors.email}</span>}
                 </div>
 
                 {/* ── Primary Operating Schedule ── */}
@@ -1638,33 +1426,23 @@ export default function App() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Open Time *</label>
+                  <label className="form-label">Open Time</label>
                   <input
                     type="time"
-                    className={`form-control ${clinicErrors.openTime ? 'input-error' : ''}`}
+                    className="form-control"
                     value={clinicModal.data.openTime}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, openTime: e.target.value } }));
-                      if (clinicErrors.openTime || clinicErrors.closeTime) {
-                        setClinicErrors(prev => ({ ...prev, openTime: '', closeTime: '' }));
-                      }
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, openTime: e.target.value } }))}
                   />
-                  {clinicErrors.openTime && <span className="field-error">{clinicErrors.openTime}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Close Time *</label>
+                  <label className="form-label">Close Time</label>
                   <input
                     type="time"
-                    className={`form-control ${clinicErrors.closeTime ? 'input-error' : ''}`}
+                    className="form-control"
                     value={clinicModal.data.closeTime}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, closeTime: e.target.value } }));
-                      if (clinicErrors.closeTime) setClinicErrors(prev => ({ ...prev, closeTime: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, closeTime: e.target.value } }))}
                   />
-                  {clinicErrors.closeTime && <span className="field-error">{clinicErrors.closeTime}</span>}
                 </div>
 
                 {/* ── Optional Secondary Schedule (e.g. Saturday / Weekend Hours) ── */}
@@ -1727,34 +1505,22 @@ export default function App() {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <div>
-                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Open Time *</label>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Open Time</label>
                           <input
                             type="time"
-                            className={`form-control ${clinicErrors.secondaryOpenTime ? 'input-error' : ''}`}
+                            className="form-control"
                             value={clinicModal.data.secondaryOpenTime || '08:00'}
-                            onChange={e => {
-                              setClinicModal(m => ({ ...m, data: { ...m.data, secondaryOpenTime: e.target.value } }));
-                              if (clinicErrors.secondaryOpenTime || clinicErrors.secondaryCloseTime) {
-                                setClinicErrors(prev => ({ ...prev, secondaryOpenTime: '', secondaryCloseTime: '' }));
-                              }
-                            }}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryOpenTime: e.target.value } }))}
                           />
-                          {clinicErrors.secondaryOpenTime && <span className="field-error">{clinicErrors.secondaryOpenTime}</span>}
                         </div>
                         <div>
-                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Close Time *</label>
+                          <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Close Time</label>
                           <input
                             type="time"
-                            className={`form-control ${clinicErrors.secondaryCloseTime ? 'input-error' : ''}`}
+                            className="form-control"
                             value={clinicModal.data.secondaryCloseTime || '12:00'}
-                            onChange={e => {
-                              setClinicModal(m => ({ ...m, data: { ...m.data, secondaryCloseTime: e.target.value } }));
-                              if (clinicErrors.secondaryCloseTime) {
-                                setClinicErrors(prev => ({ ...prev, secondaryCloseTime: '' }));
-                              }
-                            }}
+                            onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, secondaryCloseTime: e.target.value } }))}
                           />
-                          {clinicErrors.secondaryCloseTime && <span className="field-error">{clinicErrors.secondaryCloseTime}</span>}
                         </div>
                       </div>
                     </div>
@@ -1769,49 +1535,36 @@ export default function App() {
                 )}
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Pin Location on Map *</label>
+                  <label className="form-label">Pin Location on Map</label>
                   <MapPicker
                     latitude={clinicModal.data.latitude}
                     longitude={clinicModal.data.longitude}
-                    onChange={(lat, lng) => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, latitude: lat, longitude: lng } }));
-                      if (clinicErrors.latitude || clinicErrors.longitude) {
-                        setClinicErrors(prev => ({ ...prev, latitude: '', longitude: '' }));
-                      }
-                    }}
+                    onChange={(lat, lng) => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: lat, longitude: lng } }))}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Latitude *</label>
+                  <label className="form-label">Latitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
                   <input
                     type="number"
                     step="any"
-                    className={`form-control ${clinicErrors.latitude ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="e.g. 14.5995"
                     value={clinicModal.data.latitude}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, latitude: e.target.value } }));
-                      if (clinicErrors.latitude) setClinicErrors(prev => ({ ...prev, latitude: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, latitude: e.target.value } }))}
                   />
-                  {clinicErrors.latitude && <span className="field-error">{clinicErrors.latitude}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Longitude *</label>
+                  <label className="form-label">Longitude <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(optional)</span></label>
                   <input
                     type="number"
                     step="any"
-                    className={`form-control ${clinicErrors.longitude ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="e.g. 120.9842"
                     value={clinicModal.data.longitude}
-                    onChange={e => {
-                      setClinicModal(m => ({ ...m, data: { ...m.data, longitude: e.target.value } }));
-                      if (clinicErrors.longitude) setClinicErrors(prev => ({ ...prev, longitude: '' }));
-                    }}
+                    onChange={e => setClinicModal(m => ({ ...m, data: { ...m.data, longitude: e.target.value } }))}
                   />
-                  {clinicErrors.longitude && <span className="field-error">{clinicErrors.longitude}</span>}
                 </div>
               </div>
 
@@ -1830,140 +1583,91 @@ export default function App() {
           AD MODAL — Add / Edit
       ══════════════════════════════════════════════════════════ */}
       {adModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '580px' }}>
+        <div className="modal-overlay" onClick={closeAdModal}>
+          <div className="modal-content" style={{ maxWidth: '580px' }} onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={closeAdModal}><Icons.Close /></button>
             <h3 className="modal-title">
               {adModal.mode === 'add' ? 'Create New Advertisement' : 'Edit Advertisement'}
             </h3>
 
-            <form onSubmit={handleSaveAd} noValidate>
-              {adErrors.form && <div className="field-error" style={{ marginBottom: '12px' }}>{adErrors.form}</div>}
+            <form onSubmit={handleSaveAd}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Advertisement Title *</label>
                   <input
                     type="text"
-                    className={`form-control ${adErrors.title ? 'input-error' : ''}`}
+                    className="form-control"
                     placeholder="e.g. Summer Pet Health Promo"
+                    required
                     value={adModal.data.title}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }));
-                      if (adErrors.title) setAdErrors(prev => ({ ...prev, title: '' }));
-                    }}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }))}
                   />
-                  {adErrors.title && <span className="field-error">{adErrors.title}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Description *</label>
+                  <label className="form-label">Description</label>
                   <textarea
-                    className={`form-control ${adErrors.description ? 'input-error' : ''}`}
+                    className="form-control"
                     rows={3}
                     placeholder="Describe what the advertisement is about..."
-                    style={{ resize: 'none', fontFamily: 'var(--font-sans)' }}
+                    style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
                     value={adModal.data.description}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }));
-                      if (adErrors.description) setAdErrors(prev => ({ ...prev, description: '' }));
-                    }}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }))}
                   />
-                  {adErrors.description && <span className="field-error">{adErrors.description}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Advertisement Image *</label>
-                  <label
-                    className={`file-upload-box ${adErrors.imageUrl ? 'input-error' : ''}`}
-                    tabIndex={0}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={adImageUploading}
-                      onChange={handleAdImageUpload}
-                      style={{ display: 'none' }}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                      {adModal.data.imageUrl && !adImageUploading ? (
-                        <img
-                          src={adModal.data.imageUrl}
-                          alt="Ad preview"
-                          className="file-upload-thumb"
-                        />
-                      ) : (
-                        <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Icons.Image />
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {adImageUploading
-                            ? 'Uploading image to Cloudinary...'
-                            : adModal.data.imageUrl
-                            ? 'Image uploaded and ready'
-                            : 'Select an image file to upload'}
-                        </span>
-                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-                          {adImageUploading
-                            ? 'Please wait a moment'
-                            : adModal.data.imageUrl
-                            ? 'Click to replace with a different image'
-                            : 'Supports PNG, JPG, WEBP'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="file-upload-btn">
-                      <Icons.Image />
-                      {adImageUploading ? 'Uploading...' : adModal.data.imageUrl ? 'Change Image' : 'Choose Image'}
-                    </span>
-                  </label>
-                  {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
-                </div>
-
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Target URL * <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
+                  <label className="form-label">Image URL</label>
                   <input
                     type="url"
-                    className={`form-control ${adErrors.targetUrl ? 'input-error' : ''}`}
+                    className="form-control"
+                    placeholder="https://example.com/ad-banner.jpg"
+                    value={adModal.data.imageUrl}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }))}
+                  />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Target URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
+                  <input
+                    type="url"
+                    className="form-control"
                     placeholder="https://example.com/promo"
                     value={adModal.data.targetUrl}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }));
-                      if (adErrors.targetUrl) setAdErrors(prev => ({ ...prev, targetUrl: '' }));
-                    }}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }))}
                   />
-                  {adErrors.targetUrl && <span className="field-error">{adErrors.targetUrl}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Start Date *</label>
+                  <label className="form-label">Start Date</label>
                   <input
                     type="date"
-                    className={`form-control ${adErrors.startDate ? 'input-error' : ''}`}
+                    className="form-control"
                     value={adModal.data.startDate}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }));
-                      if (adErrors.startDate || adErrors.endDate) {
-                        setAdErrors(prev => ({ ...prev, startDate: '', endDate: '' }));
-                      }
-                    }}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }))}
                   />
-                  {adErrors.startDate && <span className="field-error">{adErrors.startDate}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">End Date *</label>
+                  <label className="form-label">End Date</label>
                   <input
                     type="date"
-                    className={`form-control ${adErrors.endDate ? 'input-error' : ''}`}
+                    className="form-control"
                     value={adModal.data.endDate}
-                    onChange={e => {
-                      setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }));
-                      if (adErrors.endDate) setAdErrors(prev => ({ ...prev, endDate: '' }));
-                    }}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }))}
                   />
-                  {adErrors.endDate && <span className="field-error">{adErrors.endDate}</span>}
+                </div>
+
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Advertisement Type</label>
+                  <select
+                    className="form-control"
+                    value={adModal.data.adType || 'rich_media'}
+                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, adType: e.target.value } }))}
+                  >
+                    <option value="rich_media">Rich Media (Banner + Spotlight Card)</option>
+                    <option value="banner">Banner Only</option>
+                  </select>
                 </div>
 
                 {/* Active toggle */}
@@ -1987,8 +1691,8 @@ export default function App() {
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn-secondary" onClick={closeAdModal}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={saving} style={{ minWidth: '120px' }}>
-                  {saving ? 'Saving...' : adModal.mode === 'add' ? 'Create Advertisement' : 'Save Changes'}
+                <button type="submit" className="btn-primary" disabled={saving || adImageUploading} style={{ minWidth: '120px' }}>
+                  {adImageUploading ? 'Uploading Image...' : saving ? 'Saving...' : adModal.mode === 'add' ? 'Create Advertisement' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -2025,7 +1729,6 @@ export default function App() {
             <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.5', marginBottom: '24px' }}>
               Are you sure you want to delete <strong style={{ color: 'var(--color-text-primary)' }}>"{deleteModal.title}"</strong>? This action cannot be undone.
             </p>
-            {deleteError && <div className="field-error" style={{ marginBottom: '16px' }}>{deleteError}</div>}
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button
