@@ -150,6 +150,8 @@ const Icons = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlg5lkxmu';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'PawsCura_ScanImg';
 
 // ── Blank forms ───────────────────────────────────────────────────────────────
 const BLANK_CLINIC = {
@@ -183,6 +185,15 @@ const BLANK_AD = {
 };
 
 // ── Utility ───────────────────────────────────────────────────────────────────
+function isValidHttpUrl(val) {
+  try {
+    const u = new URL(val);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function fmt12(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
@@ -314,6 +325,8 @@ export default function App() {
   // Modal state
   const [clinicModal, setClinicModal] = useState({ open: false, mode: 'add', data: BLANK_CLINIC, id: null });
   const [adModal, setAdModal] = useState({ open: false, mode: 'add', data: BLANK_AD, id: null });
+  const [adErrors, setAdErrors] = useState({});
+  const [adImageUploading, setAdImageUploading] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, type: '', id: null, title: '' });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -586,7 +599,6 @@ export default function App() {
         latitude: clinicModal.data.latitude ? parseFloat(clinicModal.data.latitude) : null,
         longitude: clinicModal.data.longitude ? parseFloat(clinicModal.data.longitude) : null,
         status: clinicModal.data.status || 'active',
-        status: clinicModal.data.status || 'active',
         userId: user?.uid || auth.currentUser?.uid || null,
         updatedAt: serverTimestamp(),
       };
@@ -687,14 +699,40 @@ export default function App() {
 
   const handleSaveAd = async (e) => {
     e.preventDefault();
-    if (!adModal.data.title.trim()) { alert('Advertisement title is required.'); return; }
+    const errs = {};
+    const trimmedTitle = (adModal.data.title || '').trim();
+    const trimmedDescription = (adModal.data.description || '').trim();
+    const trimmedImage = (adModal.data.imageUrl || '').trim();
+    const trimmedTarget = (adModal.data.targetUrl || '').trim();
+
+    if (!trimmedTitle) {
+      errs.title = 'Advertisement title is required.';
+    }
+    if (adImageUploading) {
+      errs.imageUrl = 'Please wait for the image upload to finish.';
+    } else if (trimmedImage && !isValidHttpUrl(trimmedImage)) {
+      errs.imageUrl = 'Enter a valid image URL starting with http:// or https://.';
+    }
+    if (trimmedTarget && !isValidHttpUrl(trimmedTarget)) {
+      errs.targetUrl = 'Enter a valid URL starting with http:// or https://.';
+    }
+    if (adModal.data.startDate && adModal.data.endDate && adModal.data.endDate < adModal.data.startDate) {
+      errs.endDate = 'End date cannot be earlier than start date.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setAdErrors(errs);
+      return;
+    }
+
+    setAdErrors({});
     setSaving(true);
     try {
       const payload = {
-        title: adModal.data.title.trim(),
-        description: adModal.data.description.trim(),
-        imageUrl: adModal.data.imageUrl.trim(),
-        targetUrl: adModal.data.targetUrl.trim(),
+        title: trimmedTitle,
+        description: trimmedDescription,
+        imageUrl: trimmedImage,
+        targetUrl: trimmedTarget,
         adType: adModal.data.adType || 'rich_media',
         isActive: Boolean(adModal.data.isActive),
         startDate: adModal.data.startDate || null,
@@ -1590,18 +1628,22 @@ export default function App() {
               {adModal.mode === 'add' ? 'Create New Advertisement' : 'Edit Advertisement'}
             </h3>
 
-            <form onSubmit={handleSaveAd}>
+            <form onSubmit={handleSaveAd} noValidate>
+              {adErrors.form && <div className="field-error" style={{ marginBottom: '12px' }}>{adErrors.form}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Advertisement Title *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${adErrors.title ? 'input-error' : ''}`}
                     placeholder="e.g. Summer Pet Health Promo"
-                    required
                     value={adModal.data.title}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, title: e.target.value } }));
+                      if (adErrors.title) setAdErrors(prev => ({ ...prev, title: '' }));
+                    }}
                   />
+                  {adErrors.title && <span className="field-error">{adErrors.title}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -1610,32 +1652,86 @@ export default function App() {
                     className="form-control"
                     rows={3}
                     placeholder="Describe what the advertisement is about..."
-                    style={{ resize: 'vertical', fontFamily: 'var(--font-sans)' }}
+                    style={{ resize: 'none', fontFamily: 'var(--font-sans)' }}
                     value={adModal.data.description}
                     onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, description: e.target.value } }))}
                   />
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">Image URL</label>
+                  <label className="form-label">Advertisement Image</label>
+                  <label
+                    className={`file-upload-box ${adErrors.imageUrl ? 'input-error' : ''}`}
+                    tabIndex={0}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={adImageUploading}
+                      onChange={handleAdImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                      {adModal.data.imageUrl && !adImageUploading ? (
+                        <img
+                          src={adModal.data.imageUrl}
+                          alt="Ad preview"
+                          className="file-upload-thumb"
+                        />
+                      ) : (
+                        <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--color-overlay)', color: 'var(--color-brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Icons.Image />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {adImageUploading
+                            ? 'Uploading image to Cloudinary...'
+                            : adModal.data.imageUrl
+                            ? 'Image uploaded and ready'
+                            : 'Select an image file to upload'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+                          {adImageUploading
+                            ? 'Please wait a moment'
+                            : adModal.data.imageUrl
+                            ? 'Click to replace with a different image'
+                            : 'Supports PNG, JPG, WEBP'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="file-upload-btn">
+                      <Icons.Image />
+                      {adImageUploading ? 'Uploading...' : adModal.data.imageUrl ? 'Change Image' : 'Choose Image'}
+                    </span>
+                  </label>
                   <input
                     type="url"
-                    className="form-control"
-                    placeholder="https://example.com/ad-banner.jpg"
+                    className={`form-control ${adErrors.imageUrl ? 'input-error' : ''}`}
+                    style={{ marginTop: '8px' }}
+                    placeholder="Or paste image URL (https://example.com/ad-banner.jpg)"
                     value={adModal.data.imageUrl}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, imageUrl: e.target.value } }));
+                      if (adErrors.imageUrl) setAdErrors(prev => ({ ...prev, imageUrl: '' }));
+                    }}
                   />
+                  {adErrors.imageUrl && <span className="field-error">{adErrors.imageUrl}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Target URL <span style={{ fontWeight: 400, textTransform: 'none', color: 'var(--color-text-muted)' }}>(where it links to)</span></label>
                   <input
                     type="url"
-                    className="form-control"
+                    className={`form-control ${adErrors.targetUrl ? 'input-error' : ''}`}
                     placeholder="https://example.com/promo"
                     value={adModal.data.targetUrl}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, targetUrl: e.target.value } }));
+                      if (adErrors.targetUrl) setAdErrors(prev => ({ ...prev, targetUrl: '' }));
+                    }}
                   />
+                  {adErrors.targetUrl && <span className="field-error">{adErrors.targetUrl}</span>}
                 </div>
 
                 <div className="form-group">
@@ -1644,7 +1740,10 @@ export default function App() {
                     type="date"
                     className="form-control"
                     value={adModal.data.startDate}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, startDate: e.target.value } }));
+                      if (adErrors.endDate) setAdErrors(prev => ({ ...prev, endDate: '' }));
+                    }}
                   />
                 </div>
 
@@ -1652,10 +1751,14 @@ export default function App() {
                   <label className="form-label">End Date</label>
                   <input
                     type="date"
-                    className="form-control"
+                    className={`form-control ${adErrors.endDate ? 'input-error' : ''}`}
                     value={adModal.data.endDate}
-                    onChange={e => setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }))}
+                    onChange={e => {
+                      setAdModal(m => ({ ...m, data: { ...m.data, endDate: e.target.value } }));
+                      if (adErrors.endDate) setAdErrors(prev => ({ ...prev, endDate: '' }));
+                    }}
                   />
+                  {adErrors.endDate && <span className="field-error">{adErrors.endDate}</span>}
                 </div>
 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
